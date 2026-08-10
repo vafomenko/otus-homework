@@ -1,0 +1,13 @@
+**/.git
+**/.gitignore
+**/.idea
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/TestResults
+**/.env
+**/*.log
+Dockerfile*
+README.md
+tests
