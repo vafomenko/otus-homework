@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "blt-orders-api.fullname" . }}-config
+  labels:
+    {{- include "blt-orders-api.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  ASPNETCORE_ENVIRONMENT: Production
+  ASPNETCORE_URLS: http://+:8000
+  Database__Host: {{ .Values.database.host | quote }}
+  Database__Port: {{ .Values.database.port | quote }}
+  Database__Name: {{ .Values.database.name | quote }}
+  Database__SslMode: {{ .Values.database.sslMode | quote }}

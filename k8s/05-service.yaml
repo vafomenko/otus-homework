@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: blt-orders-api
+  namespace: blt
+  labels:
+    app.kubernetes.io/name: blt-orders-api
+    app.kubernetes.io/part-of: blt
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: blt-orders-api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      protocol: TCP

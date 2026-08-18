@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blt-orders-api-config
+  namespace: blt
+  labels:
+    app.kubernetes.io/name: blt-orders-api
+    app.kubernetes.io/part-of: blt
+data:
+  ASPNETCORE_ENVIRONMENT: Production
+  ASPNETCORE_URLS: http://+:8000
+  Database__Host: users-db
+  Database__Port: "5432"
+  Database__Name: users
+  Database__SslMode: Disable

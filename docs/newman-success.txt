@@ -1,0 +1,40 @@
+PS> newman run postman/homework-4.postman_collection.json
+
+newman
+
+OTUS Homework 4 - User CRUD
+
+→ 1. Создать пользователя
+  POST http://arch.homework/user [201 Created]
+  √ Ответ получен от User API
+  √ Создание возвращает 201
+  √ Ответ содержит числовой id
+
+→ 2. Получить пользователя
+  GET http://arch.homework/user/1 [200 OK]
+  √ Ответ получен от User API
+  √ Получение возвращает 200
+  √ Получен нужный пользователь
+
+→ 3. Обновить пользователя
+  PUT http://arch.homework/user/1 [200 OK]
+  √ Ответ получен от User API
+  √ Обновление возвращает 200
+  √ Имя обновлено
+
+→ 4. Удалить пользователя
+  DELETE http://arch.homework/user/1 [204 No Content]
+  √ Ответ получен от User API
+  √ Удаление возвращает 204
+  √ Ответ не содержит тела
+
+→ 5. Проверить удаление
+  GET http://arch.homework/user/1 [404 Not Found]
+  √ Ответ получен от User API
+  √ Удалённый пользователь возвращает 404
+  √ Ошибка содержит code 404
+
+iterations: 1 (failed: 0)
+requests: 5 (failed: 0)
+test-scripts: 10 (failed: 0)
+assertions: 15 (failed: 0)

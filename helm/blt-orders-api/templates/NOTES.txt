@@ -1,0 +1,6 @@
+API пользователей доступен по адресу:
+  http://{{ .Values.ingress.host }}/user
+
+Миграция выполняется как pre-install/pre-upgrade hook. После успешного
+завершения Job удаляется автоматически. Посмотреть hook-манифест можно так:
+  helm get hooks {{ .Release.Name }} --namespace {{ .Release.Namespace }}

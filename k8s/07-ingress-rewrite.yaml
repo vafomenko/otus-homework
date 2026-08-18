@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blt-orders-api-rewrite
+  namespace: blt
+  labels:
+    app.kubernetes.io/name: blt-orders-api
+    app.kubernetes.io/part-of: blt
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: 1m
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: arch.homework
+      http:
+        paths:
+          - path: /otusapp/vyacheslav(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: blt-orders-api
+                port:
+                  name: http

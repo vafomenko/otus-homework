@@ -1,0 +1,10 @@
+apiVersion: v2
+name: blt-orders-api
+description: RESTful User CRUD service for the OTUS infrastructure patterns homework
+type: application
+version: 1.0.0
+appVersion: "4.0.0"
+keywords:
+  - otus
+  - users
+  - crud

@@ -1,0 +1,8 @@
+# Values for ingress-nginx on a single-node local cluster such as Minikube.
+controller:
+  kind: DaemonSet
+  hostPort:
+    enabled: true
+  service:
+    type: NodePort
+  reportNodeInternalIp: true
