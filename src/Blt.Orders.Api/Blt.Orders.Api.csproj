@@ -4,4 +4,8 @@
     <RootNamespace>Blt.Orders.Api</RootNamespace>
     <AssemblyName>Blt.Orders.Api</AssemblyName>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="10.0.0" />
+  </ItemGroup>
 </Project>

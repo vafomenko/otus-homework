@@ -1,0 +1,25 @@
+# Значения Bitnami PostgreSQL для сервиса пользователей.
+# Для общего кластера замените пароль или задайте auth.existingSecret.
+architecture: standalone
+fullnameOverride: users-db
+
+auth:
+  enablePostgresUser: true
+  postgresPassword: change-me
+  username: users
+  password: change-me
+  database: users
+
+primary:
+  persistence:
+    enabled: true
+    size: 1Gi
+  service:
+    type: ClusterIP
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

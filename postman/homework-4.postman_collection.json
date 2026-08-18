@@ -1,0 +1,177 @@
+{
+  "info": {
+    "_postman_id": "c6a0b6c4-8d13-4a4d-8e49-123456789abc",
+    "name": "OTUS Homework 4 - User CRUD",
+    "description": "Проверка RESTful CRUD пользователей через Ingress arch.homework.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('Ответ получен от User API', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204, 404]);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Создать пользователя",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"johndoe589_{{$randomInt}}\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"bestjohn{{$randomInt}}@example.com\",\n  \"phone\": \"+71002003040\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/user",
+        "description": "Создание пользователя по контракту User Service."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Создание возвращает 201', function () { pm.response.to.have.status(201); });",
+              "const body = pm.response.json();",
+              "pm.test('Ответ содержит числовой id', function () { pm.expect(body.id).to.be.a('number'); });",
+              "pm.collectionVariables.set('userId', body.id);"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "2. Получить пользователя",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/user/{{userId}}",
+        "description": "Получение созданного пользователя по числовому ID."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Получение возвращает 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Получен нужный пользователь', function () {",
+              "    pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('userId')));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "3. Обновить пользователя",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Julie\",\n  \"lastName\": \"Doe\",\n  \"email\": \"updated{{$randomInt}}@example.com\",\n  \"phone\": \"+71004242424\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/user/{{userId}}",
+        "description": "Обновление полей; username можно не передавать."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Обновление возвращает 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Имя обновлено', function () { pm.expect(pm.response.json().firstName).to.eql('Julie'); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "4. Удалить пользователя",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/user/{{userId}}",
+        "description": "Удаление пользователя. Ожидается HTTP 204 без тела."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Удаление возвращает 204', function () { pm.response.to.have.status(204); });",
+              "pm.test('Ответ не содержит тела', function () { pm.expect(pm.response.text()).to.eql(''); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "5. Проверить удаление",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/user/{{userId}}",
+        "description": "После удаления ресурс должен отвечать 404."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Удалённый пользователь возвращает 404', function () { pm.response.to.have.status(404); });",
+              "pm.test('Ошибка содержит code 404', function () { pm.expect(pm.response.json().code).to.eql(404); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://arch.homework",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

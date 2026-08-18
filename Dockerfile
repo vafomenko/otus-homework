@@ -24,8 +24,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION} AS runtime
 
 WORKDIR /app
 
-LABEL org.opencontainers.image.title="BLT Orders API" \
-      org.opencontainers.image.description="Walking skeleton of the BLT Order Service"
+LABEL org.opencontainers.image.title="BLT User API" \
+      org.opencontainers.image.description="RESTful CRUD service for users"
 
 EXPOSE 8000
 

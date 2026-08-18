@@ -1,214 +1,191 @@
-# OTUS Microservice Architecture — Домашнее задание № 3
+# Домашнее задание № 4 — инфраструктурные паттерны
 
-## Основы работы с Kubernetes
+Ветка **homework-4** продолжает домашние работы 1–3. Реализован RESTful CRUD
+пользователей на ASP.NET Core/.NET 10 с PostgreSQL, Kubernetes и Helm. Внешний
+адрес приложения: **http://arch.homework**.
 
-Минимальный HTTP-сервис на C# и ASP.NET Core, развёрнутый в Kubernetes с
-помощью `Deployment`, `Service` и NGINX `Ingress`.
-
-Задание выполнено со звёздочкой: запросы с префиксом
-`/otusapp/vyacheslav/` перенаправляются в сервис без этого префикса.
-
-## Результат
-
-| Артефакт | Значение |
-|---|---|
-| Основной URL | `http://arch.homework/health` |
-| URL со звёздочкой | `http://arch.homework/otusapp/vyacheslav/health` |
-| Docker-образ | [`vafomenko/blt-orders-api:1.0.0`](https://hub.docker.com/r/vafomenko/blt-orders-api) |
-| Kubernetes-манифесты | [`k8s/`](k8s/) |
-| Postman-коллекция | [`postman/homework-3.postman_collection.json`](postman/homework-3.postman_collection.json) |
-
-Оба HTTP-запроса возвращают:
-
-```json
-{"status":"OK"}
-```
-
-## Соответствие требованиям
+## Выполнение требований
 
 | Требование | Реализация |
 |---|---|
-| Сервис слушает порт `8000` | Kestrel слушает `0.0.0.0:8000` |
-| `GET /health/` | ASP.NET Core Minimal API |
-| Не менее двух реплик | `replicas: 2` в Deployment |
-| Образ из Docker Hub | `vafomenko/blt-orders-api:1.0.0` |
-| Liveness и Readiness | HTTP-пробы обращаются к `/health/` |
-| Service | `ClusterIP`, порт `8000` |
-| Ingress host | `arch.homework` |
-| Ingress class | `ingressClassName: nginx` |
-| Задание со звёздочкой | `/otusapp/vyacheslav(/|$)(.*)` переписывается в `/$2` |
-| Применение одной командой | `kubectl apply -f k8s/` |
-| Автоматическая HTTP-проверка | Два запроса в Postman/Newman |
+| Создание, просмотр, изменение, удаление пользователей | POST/GET/PUT/DELETE /user и /user/{userId}; числовой int64 ID, username, firstName, lastName, email, phone |
+| База данных | PostgreSQL из Bitnami Helm-чарта; таблица users и таблица версий schema_migrations |
+| ConfigMaps | k8s/01-configmap.yaml содержит URL, host, port и имя БД, без пароля |
+| Secrets | k8s/02-secret.yaml хранит Database__Username и Database__Password; Helm поддерживает database.existingSecret |
+| Первоначальная миграция | Job k8s/03-migration-job.yaml запускает приложение с аргументом --migrate |
+| Ingress arch.homework/ | k8s/06-ingress-root.yaml направляет корневой URL; k8s/07-ingress-rewrite.yaml сохраняет маршрут /otusapp/vyacheslav/... из ДЗ № 3 |
+| Задание со звездочкой | helm/blt-orders-api — шаблоны Deployment, Service, Ingress, ConfigMap, Secret и Job |
+| Postman/Newman | postman/homework-4.postman_collection.json: create, get, update, delete и проверка 404 |
 
-## Схема запросов
+Контракт соответствует примеру OTUS: ресурс называется /user, ID имеет формат
+int64, а PUT может не содержать username. Для совместимости добавлены /users,
+/v1/user и /v1/users.
 
-```text
-GET arch.homework/health
-                    └──> NGINX Ingress ──> Service :8000 ──> один из 2 Pods
+## Ссылки для pull request
 
-GET arch.homework/otusapp/vyacheslav/health
-                    └──> rewrite /health ──> Service :8000 ──> один из 2 Pods
-```
+После публикации ветки создайте PR homework-4 -> main:
 
-Два ресурса Ingress разделяют обычный маршрут и маршрут с rewrite. Это не
-позволяет аннотации `rewrite-target` изменить основной `/health` endpoint.
+- [Kubernetes-манифесты](https://github.com/vafomenko/otus-homework/tree/homework-4/k8s)
+- [Helm-чарт](https://github.com/vafomenko/otus-homework/tree/homework-4/helm/blt-orders-api)
+- [создать pull request](https://github.com/vafomenko/otus-homework/compare/main...homework-4?expand=1)
 
-## Структура проекта
+## Структура
 
-```text
-.
-├── infra/
-│   └── nginx-ingress.yaml
-├── k8s/
-│   ├── deployment.yaml
-│   ├── ingress.yaml
-│   └── service.yaml
-├── postman/
-│   └── homework-3.postman_collection.json
-├── src/Blt.Orders.Api/
-├── tests/Blt.Orders.Api.Tests/
-├── Dockerfile
-└── README.md
-```
+~~~text
+db/migrations/001_users.sql        эталон SQL-миграции
+docs/openapi.yaml                  контракт OpenAPI 3
+docs/newman-success.txt            пример успешного вывода Newman
+infra/postgresql-values.yaml       values PostgreSQL
+k8s/                               raw Kubernetes-манифесты
+helm/blt-orders-api/               Helm-чарт приложения
+postman/homework-4.postman_collection.json
+src/Blt.Orders.Api/                приложение и migration runner
+tests/Blt.Orders.Api.Tests/        тесты
+~~~
 
-## Локальная проверка приложения
+## Предварительные требования и Ingress
 
-Требуется .NET SDK 10.
+Нужны Docker, .NET SDK 10, kubectl, Helm 3, Minikube (или другой кластер с
+NGINX Ingress) и Newman.
 
-```powershell
-dotnet restore
-dotnet test --configuration Release --no-restore
-dotnet run --project src/Blt.Orders.Api
-```
+~~~powershell
+minikube start
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx/
+helm repo update
+helm upgrade --install nginx ingress-nginx/ingress-nginx --namespace m --create-namespace --values infra/nginx-ingress.yaml
+kubectl wait --namespace m --for=condition=Ready pod --selector=app.kubernetes.io/component=controller --timeout=180s
+~~~
 
-В другом терминале:
+Добавьте IP Minikube в hosts:
 
-```powershell
-curl.exe http://localhost:8000/health
-```
+~~~text
+<minikube-ip> arch.homework
+~~~
 
-## Сборка и публикация Docker-образа
+В Windows это C:\Windows\System32\drivers\etc\hosts, в Linux/macOS — /etc/hosts.
 
-Образ собирается для `linux/amd64`, поэтому он запускается и на Minikube с
-обычной x86-64 нодой, даже если сборка выполняется на Apple Silicon.
+## Сборка образа
 
-```powershell
-$Image = 'vafomenko/blt-orders-api:1.0.0'
+Манифесты используют vafomenko/blt-orders-api:4.0.0:
 
+~~~powershell
+$Image = 'vafomenko/blt-orders-api:4.0.0'
 docker build --platform linux/amd64 --tag $Image .
 docker image inspect $Image --format '{{.Os}}/{{.Architecture}}'
 docker push $Image
-```
+~~~
 
-## Развёртывание в Minikube
+При необходимости замените image в raw-манифестах или image.repository/image.tag
+в values.yaml.
 
-Требуются Docker, Minikube, `kubectl` и Helm.
+## Установка PostgreSQL из Helm
 
-### 1. Запустить кластер
+Файл значений: [infra/postgresql-values.yaml](infra/postgresql-values.yaml).
+Для учебного кластера используется service users-db, база users, пользователь
+users и пароль change-me. Перед общим использованием пароль замените или
+используйте auth.existingSecret.
 
-```powershell
-minikube start
-```
-
-### 2. Установить NGINX Ingress Controller через Helm
-
-Контроллер устанавливается отдельно от приложения. Файл
-`infra/nginx-ingress.yaml` включает `hostPort` и запускает контроллер как
-`DaemonSet`, чтобы `arch.homework` был доступен на порту `80` IP-адреса
-Minikube.
-
-```powershell
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx/
+~~~powershell
+helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
-helm upgrade --install nginx ingress-nginx/ingress-nginx `
-  --namespace m `
-  --create-namespace `
-  --values infra/nginx-ingress.yaml
+helm upgrade --install users-db bitnami/postgresql --namespace blt --create-namespace --values infra/postgresql-values.yaml
+kubectl wait --namespace blt --for=condition=Ready pod --selector=app.kubernetes.io/instance=users-db --timeout=180s
+kubectl get service -n blt users-db
+~~~
 
-kubectl wait --namespace m `
-  --for=condition=Ready pod `
-  --selector=app.kubernetes.io/component=controller `
-  --timeout=180s
-```
+## Миграция и raw-манифесты
 
-### 3. Настроить имя хоста
+Рекомендуемый запуск в правильном порядке:
 
-Получить адрес кластера:
+~~~powershell
+kubectl apply -f k8s/00-namespace.yaml
+kubectl apply -f k8s/01-configmap.yaml -f k8s/02-secret.yaml
+kubectl delete job blt-orders-api-migrations -n blt --ignore-not-found
+kubectl apply -f k8s/03-migration-job.yaml
+kubectl wait --for=condition=complete job/blt-orders-api-migrations --namespace blt --timeout=180s
+kubectl apply -f k8s/04-deployment.yaml -f k8s/05-service.yaml -f k8s/06-ingress-root.yaml -f k8s/07-ingress-rewrite.yaml
+kubectl rollout status deployment/blt-orders-api -n blt --timeout=180s
+~~~
 
-```powershell
-minikube ip
-```
+Команда применения первоначальной миграции — kubectl apply -f
+k8s/03-migration-job.yaml (после ConfigMap, Secret и установки PostgreSQL).
+Job идемпотентен; для повторного запуска удалите завершившийся Job.
 
-Добавить в файл hosts строку, подставив полученный адрес:
+Требуемая в задании единая команда также поддерживается:
 
-```text
-<minikube-ip> arch.homework
-```
-
-В Windows файл находится по пути
-`C:\Windows\System32\drivers\etc\hosts` и редактируется от имени
-администратора. В Linux и macOS используется `/etc/hosts`.
-
-### 4. Применить все манифесты одной командой
-
-```powershell
+~~~powershell
 kubectl apply -f k8s/
-kubectl rollout status deployment/blt-orders-api --timeout=120s
-kubectl get deployment,pods,service,ingress
-```
+kubectl wait --for=condition=complete job/blt-orders-api-migrations --namespace blt --timeout=180s
+kubectl rollout status deployment/blt-orders-api -n blt --timeout=180s
+~~~
 
-## Проверка результата
+Нумерация 00–07 отражает зависимости. Подробная последовательность находится
+в k8s/README.md.
 
-Прямой маршрут:
+## Helm-чарт (задание со звездочкой)
 
-```powershell
-curl.exe http://arch.homework/health
-```
+~~~powershell
+helm lint helm/blt-orders-api
+helm template blt-orders-api helm/blt-orders-api --namespace blt
+helm upgrade --install blt-orders-api ./helm/blt-orders-api --namespace blt --create-namespace
+kubectl rollout status deployment/blt-orders-api-blt-orders-api --namespace blt --timeout=180s
+~~~
 
-Маршрут со звёздочкой и rewrite:
+Migration Job чарта — Helm hook pre-install/pre-upgrade. Для production задайте
+database.existingSecret в отдельном values-файле; Secret должен содержать ключи
+Database__Username и Database__Password.
 
-```powershell
-curl.exe http://arch.homework/otusapp/vyacheslav/health
-```
+## API
 
-Ожидаемый ответ в обоих случаях:
+~~~powershell
+curl.exe -X POST http://arch.homework/user -H 'Content-Type: application/json' -d '{"username":"johndoe589","firstName":"John","lastName":"Doe","email":"john@example.com","phone":"+71002003040"}'
+curl.exe http://arch.homework/user
+curl.exe http://arch.homework/user/1
+curl.exe -X PUT http://arch.homework/user/1 -H 'Content-Type: application/json' -d '{"firstName":"Julie","lastName":"Doe","email":"julie@example.com","phone":"+71004242424"}'
+curl.exe -i -X DELETE http://arch.homework/user/1
+~~~
 
-```json
-{"status":"OK"}
-```
+Rewrite-проверка из предыдущего задания:
 
-Проверка коллекции через Newman:
+~~~powershell
+curl.exe http://arch.homework/otusapp/vyacheslav/user/1
+~~~
 
-```powershell
-newman run postman/homework-3.postman_collection.json
-```
+Ожидаемые коды: POST 201, GET 200, PUT 200, DELETE 204, неизвестный ID 404.
+Ошибки имеют тело {"code": <число>, "message": "<текст>"}.
 
-Коллекция проверяет HTTP-код `200`, `Content-Type` и точное JSON-тело для
-обоих маршрутов.
+## Newman
 
-## Удаление
+Коллекция использует базовый URL http://arch.homework и сама сохраняет ID
+созданного пользователя:
 
-Удалить приложение:
+~~~powershell
+newman run postman/homework-4.postman_collection.json
+~~~
 
-```powershell
-kubectl delete -f k8s/
-```
+Она проверяет создание, получение, обновление, удаление и последующий 404.
+Пример вывода с нулевым числом ошибок: [docs/newman-success.txt](docs/newman-success.txt).
 
-При необходимости полностью удалить установленный контроллер и локальный
-кластер:
+## Локальная проверка
 
-```powershell
-helm uninstall nginx --namespace m
-kubectl delete namespace m
-minikube delete
-```
+~~~powershell
+dotnet restore
+dotnet test --configuration Release --no-restore
+dotnet run --project src/Blt.Orders.Api
+curl.exe http://localhost:8000/health/
+~~~
 
-## Диагностика
+Health возвращает {"status":"OK"} и не требует БД. Для локального CRUD после
+настройки Database:* запустите первоначальную миграцию:
 
-```powershell
-kubectl describe deployment blt-orders-api
-kubectl describe ingress blt-orders-api
-kubectl describe ingress blt-orders-api-rewrite
-kubectl logs deployment/blt-orders-api
-kubectl get endpointslices -l kubernetes.io/service-name=blt-orders-api
-```
+~~~powershell
+dotnet run --project src/Blt.Orders.Api -- --migrate
+~~~
+
+Удаление:
+
+~~~powershell
+helm uninstall blt-orders-api --namespace blt
+kubectl delete -f k8s/ --ignore-not-found
+helm uninstall users-db --namespace blt
+~~~

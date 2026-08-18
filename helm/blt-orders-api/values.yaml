@@ -1,0 +1,60 @@
+replicaCount: 2
+
+image:
+  repository: vafomenko/blt-orders-api
+  tag: "4.0.0"
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 8000
+
+database:
+  host: users-db
+  port: 5432
+  name: users
+  sslMode: Disable
+  username: users
+  password: change-me
+  # Укажите имя заранее созданного Secret для общего кластера.
+  existingSecret: ""
+
+migration:
+  enabled: true
+  backoffLimit: 6
+  activeDeadlineSeconds: 600
+
+ingress:
+  enabled: true
+  className: nginx
+  host: arch.homework
+  rewritePrefix: /otusapp/vyacheslav
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 1m
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
