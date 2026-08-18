@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "blt-orders-api.fullname" . }}
+  name: {{ include "blt-users-api.fullname" . }}
   labels:
-    {{- include "blt-orders-api.labels" . | nindent 4 }}
+    {{- include "blt-users-api.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   revisionHistoryLimit: 3
   selector:
     matchLabels:
-      {{- include "blt-orders-api.selectorLabels" . | nindent 6 }}
+      {{- include "blt-users-api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "blt-orders-api.selectorLabels" . | nindent 8 }}
+        {{- include "blt-users-api.selectorLabels" . | nindent 8 }}
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -24,9 +24,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
             - configMapRef:
-                name: {{ include "blt-orders-api.fullname" . }}-config
+                name: {{ include "blt-users-api.fullname" . }}-config
             - secretRef:
-                name: {{ include "blt-orders-api.dbSecretName" . }}
+                name: {{ include "blt-users-api.dbSecretName" . }}
           env:
             - name: DOTNET_EnableDiagnostics
               value: "0"

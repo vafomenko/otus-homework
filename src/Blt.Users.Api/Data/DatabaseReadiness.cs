@@ -1,4 +1,4 @@
-namespace Blt.Orders.Api.Data;
+namespace Blt.Users.Api.Data;
 
 public sealed class DatabaseReadiness(DbConnectionFactory connectionFactory)
 {

@@ -1,10 +1,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: blt-orders-api
+  name: blt-users-api
   namespace: blt
   labels:
-    app.kubernetes.io/name: blt-orders-api
+    app.kubernetes.io/name: blt-users-api
     app.kubernetes.io/part-of: blt
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: 1m
@@ -18,6 +18,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: blt-orders-api
+                name: blt-users-api
                 port:
                   name: http

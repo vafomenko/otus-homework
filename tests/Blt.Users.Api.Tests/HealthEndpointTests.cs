@@ -2,7 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
-namespace Blt.Orders.Api.Tests;
+namespace Blt.Users.Api.Tests;
 
 public sealed class HealthEndpointTests(
     WebApplicationFactory<Program> application)

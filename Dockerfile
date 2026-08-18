@@ -6,13 +6,13 @@ ARG TARGETARCH
 WORKDIR /source
 
 COPY global.json Directory.Build.props ./
-COPY src/Blt.Orders.Api/Blt.Orders.Api.csproj src/Blt.Orders.Api/
+COPY src/Blt.Users.Api/Blt.Users.Api.csproj src/Blt.Users.Api/
 
-RUN dotnet restore src/Blt.Orders.Api/Blt.Orders.Api.csproj -a "$TARGETARCH"
+RUN dotnet restore src/Blt.Users.Api/Blt.Users.Api.csproj -a "$TARGETARCH"
 
-COPY src/Blt.Orders.Api/ src/Blt.Orders.Api/
+COPY src/Blt.Users.Api/ src/Blt.Users.Api/
 
-RUN dotnet publish src/Blt.Orders.Api/Blt.Orders.Api.csproj \
+RUN dotnet publish src/Blt.Users.Api/Blt.Users.Api.csproj \
     --configuration Release \
     --no-restore \
     --arch "$TARGETARCH" \
@@ -33,4 +33,4 @@ COPY --from=build /app/publish ./
 
 USER app
 
-ENTRYPOINT ["dotnet", "Blt.Orders.Api.dll"]
+ENTRYPOINT ["dotnet", "Blt.Users.Api.dll"]

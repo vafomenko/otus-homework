@@ -14,7 +14,7 @@
 | Secrets | k8s/02-secret.yaml хранит Database__Username и Database__Password; Helm поддерживает database.existingSecret |
 | Первоначальная миграция | Job k8s/03-migration-job.yaml запускает приложение с аргументом --migrate |
 | Ingress arch.homework/ | k8s/06-ingress-root.yaml направляет корневой URL; k8s/07-ingress-rewrite.yaml сохраняет маршрут /otusapp/vyacheslav/... из ДЗ № 3 |
-| Задание со звездочкой | helm/blt-orders-api — шаблоны Deployment, Service, Ingress, ConfigMap, Secret и Job |
+| Задание со звездочкой | helm/blt-users-api — шаблоны Deployment, Service, Ingress, ConfigMap, Secret и Job |
 | Postman/Newman | postman/homework-4.postman_collection.json: create, get, update, delete и проверка 404 |
 
 Контракт соответствует примеру OTUS: ресурс называется /user, ID имеет формат
@@ -26,7 +26,7 @@ int64, а PUT может не содержать username. Для совмест
 После публикации ветки создайте PR homework-4 -> main:
 
 - [Kubernetes-манифесты](https://github.com/vafomenko/otus-homework/tree/homework-4/k8s)
-- [Helm-чарт](https://github.com/vafomenko/otus-homework/tree/homework-4/helm/blt-orders-api)
+- [Helm-чарт](https://github.com/vafomenko/otus-homework/tree/homework-4/helm/blt-users-api)
 - [создать pull request](https://github.com/vafomenko/otus-homework/compare/main...homework-4?expand=1)
 
 ## Структура
@@ -37,10 +37,10 @@ docs/openapi.yaml                  контракт OpenAPI 3
 docs/newman-success.txt            пример успешного вывода Newman
 infra/postgresql-values.yaml       values PostgreSQL
 k8s/                               raw Kubernetes-манифесты
-helm/blt-orders-api/               Helm-чарт приложения
+helm/blt-users-api/               Helm-чарт приложения
 postman/homework-4.postman_collection.json
-src/Blt.Orders.Api/                приложение и migration runner
-tests/Blt.Orders.Api.Tests/        тесты
+src/Blt.Users.Api/                приложение и migration runner
+tests/Blt.Users.Api.Tests/        тесты
 ~~~
 
 ## Предварительные требования и Ingress
@@ -66,10 +66,10 @@ kubectl wait --namespace m --for=condition=Ready pod --selector=app.kubernetes.i
 
 ## Сборка образа
 
-Манифесты используют vafomenko/blt-orders-api:4.0.0:
+Манифесты используют vafomenko/blt-users-api:4.0.0:
 
 ~~~powershell
-$Image = 'vafomenko/blt-orders-api:4.0.0'
+$Image = 'vafomenko/blt-users-api:4.0.0'
 docker build --platform linux/amd64 --tag $Image .
 docker image inspect $Image --format '{{.Os}}/{{.Architecture}}'
 docker push $Image
@@ -100,11 +100,11 @@ kubectl get service -n blt users-db
 ~~~powershell
 kubectl apply -f k8s/00-namespace.yaml
 kubectl apply -f k8s/01-configmap.yaml -f k8s/02-secret.yaml
-kubectl delete job blt-orders-api-migrations -n blt --ignore-not-found
+kubectl delete job blt-users-api-migrations -n blt --ignore-not-found
 kubectl apply -f k8s/03-migration-job.yaml
-kubectl wait --for=condition=complete job/blt-orders-api-migrations --namespace blt --timeout=180s
+kubectl wait --for=condition=complete job/blt-users-api-migrations --namespace blt --timeout=180s
 kubectl apply -f k8s/04-deployment.yaml -f k8s/05-service.yaml -f k8s/06-ingress-root.yaml -f k8s/07-ingress-rewrite.yaml
-kubectl rollout status deployment/blt-orders-api -n blt --timeout=180s
+kubectl rollout status deployment/blt-users-api -n blt --timeout=180s
 ~~~
 
 Команда применения первоначальной миграции — kubectl apply -f
@@ -115,8 +115,8 @@ Job идемпотентен; для повторного запуска уда�
 
 ~~~powershell
 kubectl apply -f k8s/
-kubectl wait --for=condition=complete job/blt-orders-api-migrations --namespace blt --timeout=180s
-kubectl rollout status deployment/blt-orders-api -n blt --timeout=180s
+kubectl wait --for=condition=complete job/blt-users-api-migrations --namespace blt --timeout=180s
+kubectl rollout status deployment/blt-users-api -n blt --timeout=180s
 ~~~
 
 Нумерация 00–07 отражает зависимости. Подробная последовательность находится
@@ -125,10 +125,10 @@ kubectl rollout status deployment/blt-orders-api -n blt --timeout=180s
 ## Helm-чарт (задание со звездочкой)
 
 ~~~powershell
-helm lint helm/blt-orders-api
-helm template blt-orders-api helm/blt-orders-api --namespace blt
-helm upgrade --install blt-orders-api ./helm/blt-orders-api --namespace blt --create-namespace
-kubectl rollout status deployment/blt-orders-api-blt-orders-api --namespace blt --timeout=180s
+helm lint helm/blt-users-api
+helm template blt-users-api helm/blt-users-api --namespace blt
+helm upgrade --install blt-users-api ./helm/blt-users-api --namespace blt --create-namespace
+kubectl rollout status deployment/blt-users-api --namespace blt --timeout=180s
 ~~~
 
 Migration Job чарта — Helm hook pre-install/pre-upgrade. Для production задайте
@@ -171,7 +171,7 @@ newman run postman/homework-4.postman_collection.json
 ~~~powershell
 dotnet restore
 dotnet test --configuration Release --no-restore
-dotnet run --project src/Blt.Orders.Api
+dotnet run --project src/Blt.Users.Api
 curl.exe http://localhost:8000/health/
 ~~~
 
@@ -179,13 +179,13 @@ Health возвращает {"status":"OK"} и не требует БД. Для 
 настройки Database:* запустите первоначальную миграцию:
 
 ~~~powershell
-dotnet run --project src/Blt.Orders.Api -- --migrate
+dotnet run --project src/Blt.Users.Api -- --migrate
 ~~~
 
 Удаление:
 
 ~~~powershell
-helm uninstall blt-orders-api --namespace blt
+helm uninstall blt-users-api --namespace blt
 kubectl delete -f k8s/ --ignore-not-found
 helm uninstall users-db --namespace blt
 ~~~

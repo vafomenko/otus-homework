@@ -16,6 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Blt.Orders.Api/Blt.Orders.Api.csproj" />
+    <ProjectReference Include="../../src/Blt.Users.Api/Blt.Users.Api.csproj" />
   </ItemGroup>
 </Project>

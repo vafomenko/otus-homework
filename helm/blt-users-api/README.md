@@ -3,7 +3,7 @@
 Установка в namespace `blt`:
 
 ```powershell
-helm upgrade --install blt-orders-api ./helm/blt-orders-api --namespace blt --create-namespace
+helm upgrade --install blt-users-api ./helm/blt-users-api --namespace blt --create-namespace
 ```
 
 Для общего кластера вынесите `Database__Username` и `Database__Password` в

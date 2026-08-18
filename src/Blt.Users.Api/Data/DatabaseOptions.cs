@@ -1,6 +1,6 @@
 using Npgsql;
 
-namespace Blt.Orders.Api.Data;
+namespace Blt.Users.Api.Data;
 
 public sealed record DatabaseOptions(string ConnectionString)
 {
@@ -28,7 +28,7 @@ public sealed record DatabaseOptions(string ConnectionString)
             SslMode = sslMode,
             Timeout = 5,
             CommandTimeout = 15,
-            ApplicationName = "blt-orders-api"
+            ApplicationName = "blt-users-api"
         }.ConnectionString;
 
         return new DatabaseOptions(connectionString);

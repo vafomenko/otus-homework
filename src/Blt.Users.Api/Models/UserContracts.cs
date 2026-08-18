@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Blt.Orders.Api.Models;
+namespace Blt.Users.Api.Models;
 
 public sealed record UserResponse(
     long Id,

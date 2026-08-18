@@ -1,6 +1,6 @@
 using Npgsql;
 
-namespace Blt.Orders.Api.Data;
+namespace Blt.Users.Api.Data;
 
 public sealed class DbConnectionFactory(DatabaseOptions options)
 {

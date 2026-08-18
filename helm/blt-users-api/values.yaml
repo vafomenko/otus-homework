@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  repository: vafomenko/blt-orders-api
+  repository: vafomenko/blt-users-api
   tag: "4.0.0"
   pullPolicy: IfNotPresent
 

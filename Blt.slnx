@@ -1,4 +1,4 @@
 <Solution>
-  <Project Path="src/Blt.Orders.Api/Blt.Orders.Api.csproj" />
-  <Project Path="tests/Blt.Orders.Api.Tests/Blt.Orders.Api.Tests.csproj" />
+  <Project Path="src/Blt.Users.Api/Blt.Users.Api.csproj" />
+  <Project Path="tests/Blt.Users.Api.Tests/Blt.Users.Api.Tests.csproj" />
 </Solution>

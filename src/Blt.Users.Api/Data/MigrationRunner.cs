@@ -1,6 +1,6 @@
 using Npgsql;
 
-namespace Blt.Orders.Api.Data;
+namespace Blt.Users.Api.Data;
 
 public sealed class MigrationRunner(
     DbConnectionFactory connectionFactory,
@@ -48,7 +48,7 @@ public sealed class MigrationRunner(
         await ExecuteAsync(
             connection,
             transaction,
-            "SELECT pg_advisory_xact_lock(hashtext('blt-orders-api-migrations'));",
+            "SELECT pg_advisory_xact_lock(hashtext('blt-users-api-migrations'));",
             cancellationToken);
 
         await ExecuteAsync(

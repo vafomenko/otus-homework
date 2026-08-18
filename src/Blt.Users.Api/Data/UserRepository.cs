@@ -1,9 +1,9 @@
 using System.Data.Common;
-using Blt.Orders.Api.Models;
+using Blt.Users.Api.Models;
 using Npgsql;
 using NpgsqlTypes;
 
-namespace Blt.Orders.Api.Data;
+namespace Blt.Users.Api.Data;
 
 public sealed class UserRepository(DbConnectionFactory connectionFactory)
 {

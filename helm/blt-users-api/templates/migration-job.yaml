@@ -2,9 +2,9 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "blt-orders-api.fullname" . }}-migrations
+  name: {{ include "blt-users-api.fullname" . }}-migrations
   labels:
-    {{- include "blt-orders-api.labels" . | nindent 4 }}
+    {{- include "blt-users-api.labels" . | nindent 4 }}
     app.kubernetes.io/component: migration
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "blt-orders-api.selectorLabels" . | nindent 8 }}
+        {{- include "blt-users-api.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: migration
     spec:
       automountServiceAccountToken: false
@@ -27,12 +27,12 @@ spec:
         - name: migrate
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["dotnet", "Blt.Orders.Api.dll", "--migrate"]
+          command: ["dotnet", "Blt.Users.Api.dll", "--migrate"]
           envFrom:
             - configMapRef:
-                name: {{ include "blt-orders-api.fullname" . }}-config
+                name: {{ include "blt-users-api.fullname" . }}-config
             - secretRef:
-                name: {{ include "blt-orders-api.dbSecretName" . }}
+                name: {{ include "blt-users-api.dbSecretName" . }}
           env:
             - name: DOTNET_EnableDiagnostics
               value: "0"

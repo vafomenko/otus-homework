@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Blt.Orders.Api.Data;
-using Blt.Orders.Api.Endpoints;
+using Blt.Users.Api.Data;
+using Blt.Users.Api.Endpoints;
 
 var migrationMode = args.Any(static argument =>
     string.Equals(argument, "--migrate", StringComparison.OrdinalIgnoreCase));

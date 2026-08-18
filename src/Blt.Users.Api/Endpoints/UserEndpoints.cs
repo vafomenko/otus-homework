@@ -1,7 +1,7 @@
-using Blt.Orders.Api.Data;
-using Blt.Orders.Api.Models;
+using Blt.Users.Api.Data;
+using Blt.Users.Api.Models;
 
-namespace Blt.Orders.Api.Endpoints;
+namespace Blt.Users.Api.Endpoints;
 
 public static class UserEndpoints
 {
