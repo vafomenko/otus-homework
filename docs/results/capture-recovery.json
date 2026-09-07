@@ -1,0 +1,8 @@
+{
+  "from": 1788805791616,
+  "to": 1788806393222,
+  "capturedAt": "2026-09-07T18:40:11.237Z",
+  "grafana": "http://localhost:3005",
+  "browserErrors": [],
+  "dashboard": "blt-users-overview"
+}

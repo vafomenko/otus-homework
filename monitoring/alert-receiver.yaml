@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-receiver
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: alert-receiver}
+  template:
+    metadata:
+      labels: {app: alert-receiver}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsUser: 1000, runAsNonRoot: true}
+      containers:
+        - name: receiver
+          image: python:3.12-alpine
+          command: [python, -u, /app/server.py]
+          ports:
+            - {name: http, containerPort: 8080}
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 64Mi}
+          volumeMounts:
+            - {name: code, mountPath: /app, readOnly: true}
+      volumes:
+        - name: code
+          configMap: {name: alert-receiver-code}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-receiver
+spec:
+  selector: {app: alert-receiver}
+  ports:
+    - {name: http, port: 8080}

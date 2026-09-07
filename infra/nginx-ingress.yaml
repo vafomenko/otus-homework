@@ -1,8 +1,23 @@
-# Values for ingress-nginx on a single-node local cluster such as Minikube.
+# ingress-nginx chart 4.15.1; kind maps 30080 to localhost:8085.
 controller:
-  kind: DaemonSet
-  hostPort:
-    enabled: true
+  # linux/amd64 manifests of the images pinned by chart 4.15.1.
+  image:
+    digest: sha256:de8fd8f1def14ed36f59c9838bd3c920ecb01754072e3e9f10832d62ef876cb8
+  admissionWebhooks:
+    patch:
+      image:
+        digest: sha256:f0dd00beb0fa11f65e81a0fcc09dd343d71d4aaa8875a2bd93f664883d481331
+  replicaCount: 1
   service:
     type: NodePort
-  reportNodeInternalIp: true
+    nodePorts:
+      http: 30080
+  metrics:
+    enabled: true
+  config:
+    disable-access-log: "true"
+  extraArgs:
+    time-buckets: "0.001,0.0025,0.005,0.01,0.025,0.05,0.1,0.2,0.3,0.5,0.75,1,2,3,5,10,20,30"
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {cpu: "1", memory: 256Mi}

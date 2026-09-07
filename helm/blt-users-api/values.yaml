@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: vafomenko/blt-users-api
-  tag: "4.0.0"
+  tag: "5.0.0"
   pullPolicy: IfNotPresent
 
 nameOverride: ""
@@ -45,6 +45,8 @@ resources:
 
 podSecurityContext:
   runAsNonRoot: true
+  runAsUser: 1654
+  runAsGroup: 1654
   seccompProfile:
     type: RuntimeDefault
 
@@ -58,3 +60,6 @@ containerSecurityContext:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+observability:
+  enableFaultInjection: false

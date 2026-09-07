@@ -1,0 +1,411 @@
+{
+  "status": "success",
+  "data": {
+    "groups": [
+      {
+        "name": "BLT service alerts",
+        "file": "OTUS",
+        "folderUid": "bfxk65ogixp8gf",
+        "rules": [
+          {
+            "state": "firing",
+            "name": "API · Error Rate > 1%",
+            "query": "100 * (sum by (method, route) (rate(blt_http_requests_total{job=\"blt-users-api\",namespace=\"blt\",status_code=~\"5..\"}[1m]))) / clamp_min((sum by (method, route) (rate(blt_http_requests_total{job=\"blt-users-api\",namespace=\"blt\"}[1m]))), 1e-9)",
+            "queriedDatasourceUIDs": [
+              "prometheus"
+            ],
+            "duration": 60,
+            "annotations": {
+              "__dashboardUid__": "blt-users-overview",
+              "__panelId__": "12",
+              "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+              "summary": "API HTTP 5xx exceeds 1% for {{ $labels.method }} {{ $labels.route }}"
+            },
+            "activeAt": "2026-09-07T18:36:20Z",
+            "alerts": [
+              {
+                "labels": {
+                  "alertname": "API · Error Rate > 1%",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "method": "GET",
+                  "route": "/user",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "12",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "API HTTP 5xx exceeds 1% for GET /user"
+                },
+                "state": "Alerting",
+                "activeAt": "2026-09-07T18:36:20Z",
+                "value": "1e+00"
+              },
+              {
+                "labels": {
+                  "alertname": "API · Error Rate > 1%",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "method": "DELETE",
+                  "route": "/user/{id}",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "12",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "API HTTP 5xx exceeds 1% for DELETE /user/{id}"
+                },
+                "state": "Normal",
+                "activeAt": "2026-09-07T18:24:40Z",
+                "value": ""
+              },
+              {
+                "labels": {
+                  "alertname": "API · Error Rate > 1%",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "method": "GET",
+                  "route": "/user/{id}",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "12",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "API HTTP 5xx exceeds 1% for GET /user/{id}"
+                },
+                "state": "Normal",
+                "activeAt": "2026-09-07T18:24:40Z",
+                "value": ""
+              },
+              {
+                "labels": {
+                  "alertname": "API · Error Rate > 1%",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "method": "POST",
+                  "route": "/user",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "12",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "API HTTP 5xx exceeds 1% for POST /user"
+                },
+                "state": "Normal",
+                "activeAt": "2026-09-07T18:24:40Z",
+                "value": ""
+              },
+              {
+                "labels": {
+                  "alertname": "API · Error Rate > 1%",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "method": "PUT",
+                  "route": "/user/{id}",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "12",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "API HTTP 5xx exceeds 1% for PUT /user/{id}"
+                },
+                "state": "Normal",
+                "activeAt": "2026-09-07T18:24:40Z",
+                "value": ""
+              }
+            ],
+            "totals": {
+              "alerting": 1,
+              "normal": 4
+            },
+            "totalsFiltered": {
+              "alerting": 1,
+              "normal": 4
+            },
+            "uid": "blt-api-errors",
+            "folderUid": "bfxk65ogixp8gf",
+            "labels": {
+              "homework": "5",
+              "service": "blt-users-api",
+              "severity": "warning"
+            },
+            "health": "ok",
+            "type": "alerting",
+            "lastEvaluation": "2026-09-07T18:36:40Z",
+            "evaluationTime": 0.002760975,
+            "isPaused": false,
+            "provenance": "file"
+          },
+          {
+            "state": "firing",
+            "name": "API · p95 latency > 300ms",
+            "query": "(histogram_quantile(0.95, sum by (le, method, route) (rate(blt_http_request_duration_seconds_bucket{job=\"blt-users-api\",namespace=\"blt\"}[1m])))) and on (method, route) ((sum by (method, route) (rate(blt_http_requests_total{job=\"blt-users-api\",namespace=\"blt\"}[1m]))) > 0)",
+            "queriedDatasourceUIDs": [
+              "prometheus"
+            ],
+            "duration": 60,
+            "annotations": {
+              "__dashboardUid__": "blt-users-overview",
+              "__panelId__": "7",
+              "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+              "summary": "API p95 exceeds 300ms for {{ $labels.method }} {{ $labels.route }}"
+            },
+            "activeAt": "2026-09-07T18:36:20Z",
+            "alerts": [
+              {
+                "labels": {
+                  "alertname": "API · p95 latency > 300ms",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "method": "GET",
+                  "route": "/user/{id}",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "7",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "API p95 exceeds 300ms for GET /user/{id}"
+                },
+                "state": "Alerting",
+                "activeAt": "2026-09-07T18:36:20Z",
+                "value": "1e+00"
+              },
+              {
+                "labels": {
+                  "alertname": "API · p95 latency > 300ms",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "method": "DELETE",
+                  "route": "/user/{id}",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "7",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "API p95 exceeds 300ms for DELETE /user/{id}"
+                },
+                "state": "Normal",
+                "activeAt": "2026-09-07T18:29:00Z",
+                "value": ""
+              },
+              {
+                "labels": {
+                  "alertname": "API · p95 latency > 300ms",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "method": "GET",
+                  "route": "/user",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "7",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "API p95 exceeds 300ms for GET /user"
+                },
+                "state": "Normal",
+                "activeAt": "2026-09-07T18:29:00Z",
+                "value": ""
+              },
+              {
+                "labels": {
+                  "alertname": "API · p95 latency > 300ms",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "method": "POST",
+                  "route": "/user",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "7",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "API p95 exceeds 300ms for POST /user"
+                },
+                "state": "Normal",
+                "activeAt": "2026-09-07T18:29:00Z",
+                "value": ""
+              },
+              {
+                "labels": {
+                  "alertname": "API · p95 latency > 300ms",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "method": "PUT",
+                  "route": "/user/{id}",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "7",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "API p95 exceeds 300ms for PUT /user/{id}"
+                },
+                "state": "Normal",
+                "activeAt": "2026-09-07T18:29:00Z",
+                "value": ""
+              }
+            ],
+            "totals": {
+              "alerting": 1,
+              "normal": 4
+            },
+            "totalsFiltered": {
+              "alerting": 1,
+              "normal": 4
+            },
+            "uid": "blt-api-latency",
+            "folderUid": "bfxk65ogixp8gf",
+            "labels": {
+              "homework": "5",
+              "service": "blt-users-api",
+              "severity": "warning"
+            },
+            "health": "ok",
+            "type": "alerting",
+            "lastEvaluation": "2026-09-07T18:36:40Z",
+            "evaluationTime": 2.503313329,
+            "isPaused": false,
+            "provenance": "file"
+          },
+          {
+            "state": "firing",
+            "name": "Ingress · Error Rate > 1%",
+            "query": "100 * (sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\",status=~\"5..\"}[1m])) or (sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m]))) * 0) / clamp_min((sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m]))), 1e-9)",
+            "queriedDatasourceUIDs": [
+              "prometheus"
+            ],
+            "duration": 60,
+            "annotations": {
+              "__dashboardUid__": "blt-users-overview",
+              "__panelId__": "17",
+              "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+              "summary": "Ingress HTTP 5xx exceeds 1%"
+            },
+            "activeAt": "2026-09-07T18:36:20Z",
+            "alerts": [
+              {
+                "labels": {
+                  "alertname": "Ingress · Error Rate > 1%",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "17",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "Ingress HTTP 5xx exceeds 1%"
+                },
+                "state": "Alerting",
+                "activeAt": "2026-09-07T18:36:20Z",
+                "value": "1e+00"
+              }
+            ],
+            "totals": {
+              "alerting": 1
+            },
+            "totalsFiltered": {
+              "alerting": 1
+            },
+            "uid": "blt-ingress-errors",
+            "folderUid": "bfxk65ogixp8gf",
+            "labels": {
+              "homework": "5",
+              "service": "blt-users-api",
+              "severity": "warning"
+            },
+            "health": "ok",
+            "type": "alerting",
+            "lastEvaluation": "2026-09-07T18:36:40Z",
+            "evaluationTime": 5.003838241,
+            "isPaused": false,
+            "provenance": "file"
+          },
+          {
+            "state": "firing",
+            "name": "Ingress · p95 latency > 300ms",
+            "query": "(histogram_quantile(0.95, sum by (le) (rate(nginx_ingress_controller_request_duration_seconds_bucket{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m])))) and on () ((sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m]))) > 0)",
+            "queriedDatasourceUIDs": [
+              "prometheus"
+            ],
+            "duration": 60,
+            "annotations": {
+              "__dashboardUid__": "blt-users-overview",
+              "__panelId__": "14",
+              "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+              "summary": "Ingress p95 exceeds 300ms"
+            },
+            "activeAt": "2026-09-07T18:36:40Z",
+            "alerts": [
+              {
+                "labels": {
+                  "alertname": "Ingress · p95 latency > 300ms",
+                  "grafana_folder": "OTUS",
+                  "homework": "5",
+                  "service": "blt-users-api",
+                  "severity": "warning"
+                },
+                "annotations": {
+                  "__dashboardUid__": "blt-users-overview",
+                  "__panelId__": "14",
+                  "description": "Sustained for 1 minute. See docs/monitoring.md for diagnosis and the controlled fault scenario.",
+                  "summary": "Ingress p95 exceeds 300ms"
+                },
+                "state": "Alerting",
+                "activeAt": "2026-09-07T18:36:40Z",
+                "value": "1e+00"
+              }
+            ],
+            "totals": {
+              "alerting": 1
+            },
+            "totalsFiltered": {
+              "alerting": 1
+            },
+            "uid": "blt-ingress-latency",
+            "folderUid": "bfxk65ogixp8gf",
+            "labels": {
+              "homework": "5",
+              "service": "blt-users-api",
+              "severity": "warning"
+            },
+            "health": "ok",
+            "type": "alerting",
+            "lastEvaluation": "2026-09-07T18:36:40Z",
+            "evaluationTime": 7.502698497,
+            "isPaused": false,
+            "provenance": "file"
+          }
+        ],
+        "totals": {
+          "firing": 4
+        },
+        "interval": 20,
+        "lastEvaluation": "2026-09-07T18:36:40Z",
+        "evaluationTime": 7.502698497
+      }
+    ],
+    "totals": {
+      "firing": 4
+    }
+  }
+}

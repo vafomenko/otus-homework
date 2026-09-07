@@ -1,5 +1,10 @@
 # Helm-чарт приложения
 
+Для ДЗ № 5 полный стенд поднимается через [scripts/setup.ps1](../../scripts/setup.ps1).
+Образ - `vafomenko/blt-users-api:5.0.0`, метрики доступны на `/metrics`.
+`observability.enableFaultInjection=false` по умолчанию. Numeric UID 1654
+позволяет Kubernetes проверить `runAsNonRoot` до запуска контейнера.
+
 Установка в namespace `blt`:
 
 ```powershell

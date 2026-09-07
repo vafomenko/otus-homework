@@ -31,6 +31,6 @@ EXPOSE 8000
 
 COPY --from=build /app/publish ./
 
-USER app
+USER $APP_UID
 
 ENTRYPOINT ["dotnet", "Blt.Users.Api.dll"]

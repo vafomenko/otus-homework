@@ -2,6 +2,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Blt.Users.Api.Data;
 using Blt.Users.Api.Endpoints;
+using Blt.Users.Api.Observability;
+using Prometheus;
 
 var migrationMode = args.Any(static argument =>
     string.Equals(argument, "--migrate", StringComparison.OrdinalIgnoreCase));
@@ -33,6 +35,8 @@ builder.Services.AddSingleton<DbConnectionFactory>();
 builder.Services.AddSingleton<MigrationRunner>();
 builder.Services.AddSingleton<DatabaseReadiness>();
 builder.Services.AddSingleton<UserRepository>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<ApiMetrics>();
 
 var app = builder.Build();
 
@@ -48,6 +52,17 @@ if (migrationMode || configuredMigrationMode)
     await app.Services.GetRequiredService<MigrationRunner>().RunAsync();
     return;
 }
+
+app.UseRouting();
+app.UseMiddleware<ApiMetricsMiddleware>();
+app.UseExceptionHandler();
+if (builder.Configuration.GetValue<bool>("Observability:EnableFaultInjection"))
+{
+    app.UseMiddleware<DemoFaultMiddleware>();
+}
+
+// A registry per application also isolates WebApplicationFactory test hosts.
+app.MapMetrics("/metrics", app.Services.GetRequiredService<ApiMetrics>().Registry);
 
 // ASP.NET Core treats a trailing slash as optional, therefore each endpoint is
 // deliberately mapped only once. Both /health and /health/ are accepted.

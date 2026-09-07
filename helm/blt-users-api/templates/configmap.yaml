@@ -11,7 +11,9 @@ metadata:
 data:
   ASPNETCORE_ENVIRONMENT: Production
   ASPNETCORE_URLS: http://+:8000
+  Logging__LogLevel__Microsoft: Warning
   Database__Host: {{ .Values.database.host | quote }}
   Database__Port: {{ .Values.database.port | quote }}
   Database__Name: {{ .Values.database.name | quote }}
   Database__SslMode: {{ .Values.database.sslMode | quote }}
+  Observability__EnableFaultInjection: {{ .Values.observability.enableFaultInjection | quote }}

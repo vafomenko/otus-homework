@@ -1,0 +1,3 @@
+# Only for the isolated, loopback-bound demonstration cluster.
+observability:
+  enableFaultInjection: true

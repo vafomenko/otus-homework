@@ -11,3 +11,9 @@
 Dockerfile*
 README.md
 tests
+.tools
+.local
+node_modules
+docs
+monitoring
+loadtests

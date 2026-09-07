@@ -1,0 +1,6 @@
+  Blt.Users.Api -> C:\Users\kick\Desktop\otus\homework\5\src\Blt.Users.Api\bin\Release\net10.0\Blt.Users.Api.dll
+  Blt.Users.Api.Tests -> C:\Users\kick\Desktop\otus\homework\5\tests\Blt.Users.Api.Tests\bin\Release\net10.0\Blt.Users.Api.Tests.dll
+Тестовый запуск для C:\Users\kick\Desktop\otus\homework\5\tests\Blt.Users.Api.Tests\bin\Release\net10.0\Blt.Users.Api.Tests.dll (.NETCoreApp,Version=v10.0)
+Общее количество тестовых файлов (1), соответствующих указанному шаблону.
+
+Пройден!   : не пройдено     0, пройдено     5, пропущено     0, всего     5, длительность 294 ms. - Blt.Users.Api.Tests.dll (net10.0)

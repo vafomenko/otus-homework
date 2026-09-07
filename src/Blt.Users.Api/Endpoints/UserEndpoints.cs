@@ -1,5 +1,6 @@
 using Blt.Users.Api.Data;
 using Blt.Users.Api.Models;
+using Blt.Users.Api.Observability;
 
 namespace Blt.Users.Api.Endpoints;
 
@@ -7,11 +8,12 @@ public static class UserEndpoints
 {
     public static void Map(WebApplication app, string prefix)
     {
-        app.MapGet(prefix, ListAsync);
-        app.MapGet($"{prefix}/{{id:long}}", GetAsync);
-        app.MapPost(prefix, CreateAsync);
-        app.MapPut($"{prefix}/{{id:long}}", UpdateAsync);
-        app.MapDelete($"{prefix}/{{id:long}}", DeleteAsync);
+        // Aliases and concrete IDs share one bounded set of metric labels.
+        app.MapGet(prefix, ListAsync).WithMetadata(new ApiMetricRoute("/user"));
+        app.MapGet($"{prefix}/{{id:long}}", GetAsync).WithMetadata(new ApiMetricRoute("/user/{id}"));
+        app.MapPost(prefix, CreateAsync).WithMetadata(new ApiMetricRoute("/user"));
+        app.MapPut($"{prefix}/{{id:long}}", UpdateAsync).WithMetadata(new ApiMetricRoute("/user/{id}"));
+        app.MapDelete($"{prefix}/{{id:long}}", DeleteAsync).WithMetadata(new ApiMetricRoute("/user/{id}"));
     }
 
     private static async Task<IResult> ListAsync(

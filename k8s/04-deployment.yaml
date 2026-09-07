@@ -27,11 +27,13 @@ spec:
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: api
-          image: vafomenko/blt-users-api:4.0.0
+          image: vafomenko/blt-users-api:5.0.0
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:

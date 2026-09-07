@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+resources:
+  - namespace.yaml
+  - prometheus.yaml
+  - grafana.yaml
+  - alert-receiver.yaml
+configMapGenerator:
+  - name: prometheus-config
+    files: [prometheus.yml=config/prometheus.yml]
+  - name: grafana-datasources
+    files: [datasources.yaml=grafana/datasources.yaml]
+  - name: grafana-providers
+    files: [dashboards.yaml=grafana/dashboards.yaml]
+  - name: grafana-dashboard
+    files: [blt-users-overview.json=grafana/dashboards/blt-users-overview.json]
+  - name: grafana-alerts
+    files: [alerts.json=grafana/alerting/alerts.json]
+  - name: alert-receiver-code
+    files: [server.py=alert-receiver/server.py]

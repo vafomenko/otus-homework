@@ -21,11 +21,13 @@ spec:
       restartPolicy: OnFailure
       securityContext:
         runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: migrate
-          image: vafomenko/blt-users-api:4.0.0
+          image: vafomenko/blt-users-api:5.0.0
           imagePullPolicy: IfNotPresent
           command: ["dotnet", "Blt.Users.Api.dll", "--migrate"]
           envFrom:

@@ -15,3 +15,10 @@
 *.log
 Thumbs.db
 .DS_Store
+
+# Local tools, cluster credentials and temporary artifacts
+.tools/
+.local/
+node_modules/
+__pycache__/
+*.pyc

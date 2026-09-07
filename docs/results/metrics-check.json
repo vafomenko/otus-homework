@@ -1,0 +1,333 @@
+{
+  "checkedAt": 1788806396.605698,
+  "start": 1788805791.0,
+  "end": 1788806393.0,
+  "targets": [
+    {
+      "labels": {
+        "instance": "10.244.0.17:8000",
+        "job": "blt-users-api",
+        "namespace": "blt",
+        "pod": "blt-users-api-7678d44d99-g5gjj"
+      },
+      "health": "up",
+      "error": ""
+    },
+    {
+      "labels": {
+        "instance": "10.244.0.18:8000",
+        "job": "blt-users-api",
+        "namespace": "blt",
+        "pod": "blt-users-api-7678d44d99-v7vfn"
+      },
+      "health": "up",
+      "error": ""
+    },
+    {
+      "labels": {
+        "instance": "ingress-nginx-controller-metrics.ingress-nginx.svc:10254",
+        "job": "ingress-nginx"
+      },
+      "health": "up",
+      "error": ""
+    },
+    {
+      "labels": {
+        "instance": "otus-hw5-control-plane",
+        "job": "kubernetes-cadvisor",
+        "node": "otus-hw5-control-plane"
+      },
+      "health": "up",
+      "error": ""
+    },
+    {
+      "labels": {
+        "instance": "postgres-exporter.blt.svc:9187",
+        "job": "postgres-exporter",
+        "namespace": "blt"
+      },
+      "health": "up",
+      "error": ""
+    },
+    {
+      "labels": {
+        "instance": "localhost:9090",
+        "job": "prometheus"
+      },
+      "health": "up",
+      "error": ""
+    }
+  ],
+  "queries": [
+    {
+      "panel": "Ingress · RPS",
+      "legend": "RPS",
+      "expression": "sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m]))",
+      "series": 1,
+      "samples": 61,
+      "min": 5.400108002160043,
+      "max": 702.2021321279278
+    },
+    {
+      "panel": "Ingress · HTTP 5xx",
+      "legend": "5xx",
+      "expression": "100 * (sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\",status=~\"5..\"}[1m])) or (sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m]))) * 0) / clamp_min((sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m]))), 1e-9)",
+      "series": 1,
+      "samples": 61,
+      "min": 0.0,
+      "max": 5.140798952193844
+    },
+    {
+      "panel": "API · requests in selected range",
+      "legend": "Requests",
+      "expression": "sum(increase(blt_http_requests_total{job=\"blt-users-api\",namespace=\"blt\"}[602s]))",
+      "series": 1,
+      "samples": 61,
+      "min": 1034.2472748637433,
+      "max": 226054.27942315614
+    },
+    {
+      "panel": "PostgreSQL · available",
+      "legend": "pg_up",
+      "expression": "pg_up{job=\"postgres-exporter\",namespace=\"blt\"}",
+      "series": 1,
+      "samples": 61,
+      "min": 1.0,
+      "max": 1.0
+    },
+    {
+      "panel": "API latency · p50",
+      "legend": "{{method}} {{route}}",
+      "expression": "histogram_quantile(0.5, sum by (le, method, route) (rate(blt_http_request_duration_seconds_bucket{job=\"blt-users-api\",namespace=\"blt\"}[1m])))",
+      "series": 5,
+      "samples": 305,
+      "min": 0.0005,
+      "max": 0.6251022494887526
+    },
+    {
+      "panel": "API latency · p95",
+      "legend": "{{method}} {{route}}",
+      "expression": "histogram_quantile(0.95, sum by (le, method, route) (rate(blt_http_request_duration_seconds_bucket{job=\"blt-users-api\",namespace=\"blt\"}[1m])))",
+      "series": 5,
+      "samples": 305,
+      "min": 0.0009499999999999999,
+      "max": 0.7376942740286299
+    },
+    {
+      "panel": "API latency · p99",
+      "legend": "{{method}} {{route}}",
+      "expression": "histogram_quantile(0.99, sum by (le, method, route) (rate(blt_http_request_duration_seconds_bucket{job=\"blt-users-api\",namespace=\"blt\"}[1m])))",
+      "series": 5,
+      "samples": 305,
+      "min": 0.00099,
+      "max": 0.74770245398773
+    },
+    {
+      "panel": "API latency · max (exact, 1m)",
+      "legend": "{{method}} {{route}}",
+      "expression": "max by (method, route) (blt_http_request_duration_max_seconds{job=\"blt-users-api\",namespace=\"blt\"})",
+      "series": 5,
+      "samples": 305,
+      "min": 0.0006318,
+      "max": 0.7552381
+    },
+    {
+      "panel": "API · RPS by method",
+      "legend": "{{method}} {{route}}",
+      "expression": "sum by (method, route) (rate(blt_http_requests_total{job=\"blt-users-api\",namespace=\"blt\"}[1m]))",
+      "series": 5,
+      "samples": 305,
+      "min": 1.0800204012240735,
+      "max": 141.10850616919308
+    },
+    {
+      "panel": "API · HTTP 500 responses / 1m",
+      "legend": "{{method}} {{route}}",
+      "expression": "sum by (method, route) (increase(blt_http_requests_total{job=\"blt-users-api\",namespace=\"blt\",status_code=\"500\"}[1m]))",
+      "series": 5,
+      "samples": 305,
+      "min": 0.0,
+      "max": 756.0302412096484
+    },
+    {
+      "panel": "API · Error Rate (all HTTP 5xx)",
+      "legend": "{{method}} {{route}}",
+      "expression": "100 * (sum by (method, route) (rate(blt_http_requests_total{job=\"blt-users-api\",namespace=\"blt\",status_code=~\"5..\"}[1m]))) / clamp_min((sum by (method, route) (rate(blt_http_requests_total{job=\"blt-users-api\",namespace=\"blt\"}[1m]))), 1e-9)",
+      "series": 5,
+      "samples": 305,
+      "min": 0.0,
+      "max": 25.651465798045606
+    },
+    {
+      "panel": "Ingress latency · p50 / p95 / p99 / max",
+      "legend": "p50",
+      "expression": "histogram_quantile(0.5, sum by (le) (rate(nginx_ingress_controller_request_duration_seconds_bucket{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m])))",
+      "series": 1,
+      "samples": 61,
+      "min": 0.0015016119476939749,
+      "max": 0.0036765691981470146
+    },
+    {
+      "panel": "Ingress latency · p50 / p95 / p99 / max",
+      "legend": "p95",
+      "expression": "histogram_quantile(0.95, sum by (le) (rate(nginx_ingress_controller_request_duration_seconds_bucket{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m])))",
+      "series": 1,
+      "samples": 61,
+      "min": 0.004649896265560167,
+      "max": 0.6877561626838234
+    },
+    {
+      "panel": "Ingress latency · p50 / p95 / p99 / max",
+      "legend": "p99",
+      "expression": "histogram_quantile(0.99, sum by (le) (rate(nginx_ingress_controller_request_duration_seconds_bucket{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m])))",
+      "series": 1,
+      "samples": 61,
+      "min": 0.004947959889349932,
+      "max": 0.737714631229575
+    },
+    {
+      "panel": "Ingress latency · p50 / p95 / p99 / max",
+      "legend": "max (histogram estimate)",
+      "expression": "histogram_quantile(1, sum by (le) (rate(nginx_ingress_controller_request_duration_seconds_bucket{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m])))",
+      "series": 1,
+      "samples": 61,
+      "min": 0.01,
+      "max": 1.0
+    },
+    {
+      "panel": "Ingress · RPS",
+      "legend": "RPS",
+      "expression": "sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m]))",
+      "series": 1,
+      "samples": 61,
+      "min": 5.400108002160043,
+      "max": 702.2021321279278
+    },
+    {
+      "panel": "Ingress · HTTP 500 responses / 1m",
+      "legend": "HTTP 500",
+      "expression": "(sum(increase(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\",status=\"500\"}[1m])) or (sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m]))) * 0)",
+      "series": 1,
+      "samples": 61,
+      "min": 0.0,
+      "max": 753.6602928234258
+    },
+    {
+      "panel": "Ingress · Error Rate (all HTTP 5xx)",
+      "legend": "5xx %",
+      "expression": "100 * (sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\",status=~\"5..\"}[1m])) or (sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m]))) * 0) / clamp_min((sum(rate(nginx_ingress_controller_requests{job=\"ingress-nginx\",namespace=\"blt\",service=\"blt-users-api\"}[1m]))), 1e-9)",
+      "series": 1,
+      "samples": 61,
+      "min": 0.0,
+      "max": 5.140798952193844
+    },
+    {
+      "panel": "Memory · working set per pod",
+      "legend": "{{pod}}",
+      "expression": "sum by (pod) (container_memory_working_set_bytes{job=\"kubernetes-cadvisor\",namespace=\"blt\",pod=~\"blt-users-api-.*\",container=\"api\",image!=\"\"})",
+      "series": 2,
+      "samples": 122,
+      "min": 56893440.0,
+      "max": 93093888.0
+    },
+    {
+      "panel": "CPU · cores used per pod",
+      "legend": "{{pod}}",
+      "expression": "sum by (pod) (rate(container_cpu_usage_seconds_total{job=\"kubernetes-cadvisor\",namespace=\"blt\",pod=~\"blt-users-api-.*\",container=\"api\",image!=\"\"}[1m]))",
+      "series": 2,
+      "samples": 122,
+      "min": 0.002479993363382466,
+      "max": 0.12492573596358124
+    },
+    {
+      "panel": "DB · connections",
+      "legend": "connections",
+      "expression": "pg_stat_database_numbackends{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}",
+      "series": 1,
+      "samples": 61,
+      "min": 4.0,
+      "max": 47.0
+    },
+    {
+      "panel": "DB · transactions / second",
+      "legend": "commit",
+      "expression": "rate(pg_stat_database_xact_commit{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}[1m])",
+      "series": 1,
+      "samples": 61,
+      "min": 16.70066802672107,
+      "max": 1412.3929914393152
+    },
+    {
+      "panel": "DB · transactions / second",
+      "legend": "rollback",
+      "expression": "rate(pg_stat_database_xact_rollback{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}[1m])",
+      "series": 1,
+      "samples": 61,
+      "min": 0.0,
+      "max": 0.0
+    },
+    {
+      "panel": "DB · rows changed / second",
+      "legend": "insert",
+      "expression": "rate(pg_stat_database_tup_inserted{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}[1m])",
+      "series": 1,
+      "samples": 61,
+      "min": 0.9600384015360615,
+      "max": 140.49123929914396
+    },
+    {
+      "panel": "DB · rows changed / second",
+      "legend": "update",
+      "expression": "rate(pg_stat_database_tup_updated{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}[1m])",
+      "series": 1,
+      "samples": 61,
+      "min": 1.0200408016320652,
+      "max": 140.51124089927197
+    },
+    {
+      "panel": "DB · rows changed / second",
+      "legend": "delete",
+      "expression": "rate(pg_stat_database_tup_deleted{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}[1m])",
+      "series": 1,
+      "samples": 61,
+      "min": 0.9800392015680627,
+      "max": 140.63125050004
+    },
+    {
+      "panel": "DB · buffer cache hit ratio",
+      "legend": "cache hit",
+      "expression": "100 * rate(pg_stat_database_blks_hit{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}[1m]) / clamp_min((rate(pg_stat_database_blks_hit{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}[1m]) + rate(pg_stat_database_blks_read{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}[1m])), 1e-9)",
+      "series": 1,
+      "samples": 61,
+      "min": 99.99744005898104,
+      "max": 100.00000000000001
+    },
+    {
+      "panel": "DB · rows returned / fetched",
+      "legend": "returned",
+      "expression": "rate(pg_stat_database_tup_returned{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}[1m])",
+      "series": 1,
+      "samples": 61,
+      "min": 639.4983699021942,
+      "max": 3314.252570102804
+    },
+    {
+      "panel": "DB · rows returned / fetched",
+      "legend": "fetched",
+      "expression": "rate(pg_stat_database_tup_fetched{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}[1m])",
+      "series": 1,
+      "samples": 61,
+      "min": 275.0765045902755,
+      "max": 1887.7310184814787
+    },
+    {
+      "panel": "DB · deadlocks / 1m",
+      "legend": "deadlocks",
+      "expression": "increase(pg_stat_database_deadlocks{job=\"postgres-exporter\",namespace=\"blt\",datname=\"users\"}[1m])",
+      "series": 1,
+      "samples": 61,
+      "min": 0.0,
+      "max": 0.0
+    }
+  ]
+}
