@@ -1,0 +1,78 @@
+{
+  "checkedAt": "2026-09-14T17:58:33Z",
+  "user_id": 44673,
+  "events": {
+    "application_started": {
+      "count": 5,
+      "level": "INFO"
+    },
+    "application_stopping": {
+      "count": 2,
+      "level": "INFO"
+    },
+    "application_stopped": {
+      "count": 2,
+      "level": "INFO"
+    },
+    "http_request": {
+      "count": 195,
+      "level": "INFO"
+    },
+    "users_listed": {
+      "count": 1,
+      "level": "INFO"
+    },
+    "user_created": {
+      "count": 1,
+      "level": "INFO"
+    },
+    "user_read": {
+      "count": 1,
+      "level": "INFO"
+    },
+    "user_updated": {
+      "count": 1,
+      "level": "INFO"
+    },
+    "user_deleted": {
+      "count": 1,
+      "level": "INFO"
+    },
+    "validation_failed": {
+      "count": 3,
+      "level": "WARN"
+    },
+    "user_not_found": {
+      "count": 1,
+      "level": "WARN"
+    },
+    "user_conflict": {
+      "count": 1,
+      "level": "WARN"
+    },
+    "http_error": {
+      "count": 2,
+      "level": "ERROR"
+    },
+    "database_error": {
+      "count": 1,
+      "level": "ERROR"
+    },
+    "migration_started": {
+      "count": 1,
+      "level": "INFO"
+    },
+    "migration_completed": {
+      "count": 1,
+      "level": "INFO"
+    }
+  },
+  "user_events": [
+    "user_created",
+    "user_deleted",
+    "user_not_found",
+    "user_read",
+    "user_updated"
+  ],
+  "passed": true
+}

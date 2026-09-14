@@ -15,6 +15,10 @@ var hostArguments = args
     .ToArray();
 
 var builder = WebApplication.CreateSlimBuilder(hostArguments);
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole(options => options.FormatterName = "structured")
+    .AddConsoleFormatter<StructuredLogFormatter, Microsoft.Extensions.Logging.Console.ConsoleFormatterOptions>();
+builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
 
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -49,13 +53,23 @@ var configuredMigrationMode =
 
 if (migrationMode || configuredMigrationMode)
 {
-    await app.Services.GetRequiredService<MigrationRunner>().RunAsync();
+    try
+    {
+        await app.Services.GetRequiredService<MigrationRunner>().RunAsync();
+    }
+    catch (Exception exception)
+    {
+        app.Logger.LogError(exception, "{event}: migration Job failed", "migration_failed");
+        Environment.ExitCode = 1;
+    }
+    await app.DisposeAsync();
     return;
 }
 
 app.UseRouting();
 app.UseMiddleware<ApiMetricsMiddleware>();
 app.UseExceptionHandler();
+app.UseMiddleware<RequestLoggingMiddleware>();
 if (builder.Configuration.GetValue<bool>("Observability:EnableFaultInjection"))
 {
     app.UseMiddleware<DemoFaultMiddleware>();
@@ -73,7 +87,7 @@ app.MapGet(
 
 app.MapGet(
     "/ready/",
-    async (DatabaseReadiness readiness, CancellationToken cancellationToken) =>
+    async (DatabaseReadiness readiness, ILoggerFactory loggerFactory, CancellationToken cancellationToken) =>
     {
         try
         {
@@ -84,8 +98,9 @@ app.MapGet(
         {
             throw;
         }
-        catch
+        catch (Exception exception)
         {
+            loggerFactory.CreateLogger("Readiness").LogError(exception, "{event}: database readiness failed", "database_error");
             return Results.Json(
                 new ErrorResponse(503, "Database is not ready."),
                 statusCode: StatusCodes.Status503ServiceUnavailable);
@@ -109,7 +124,18 @@ foreach (var prefix in new[]
     UserEndpoints.Map(app, prefix);
 }
 
-app.Run();
+app.Lifetime.ApplicationStarted.Register(() =>
+    app.Logger.LogInformation("{event}: application started", "application_started"));
+app.Lifetime.ApplicationStopping.Register(() =>
+    app.Logger.LogInformation("{event}: application stopping", "application_stopping"));
+app.Lifetime.ApplicationStopped.Register(() =>
+    app.Logger.LogInformation("{event}: application stopped", "application_stopped"));
+try { app.Run(); }
+catch (Exception exception)
+{
+    app.Logger.LogError(exception, "{event}: application terminated unexpectedly", "application_failed");
+    throw;
+}
 
 public sealed record HealthResponse(
     [property: JsonPropertyName("status")] string Status);

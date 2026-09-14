@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana-service
+spec:
+  type: NodePort
+  selector: {app: kibana}
+  ports:
+    - {name: http, port: 5601, targetPort: http, nodePort: 30561}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: kibana}
+  template:
+    metadata:
+      labels: {app: kibana}
+    spec:
+      containers:
+        - name: kibana
+          image: docker.elastic.co/kibana/kibana:8.19.3
+          env:
+            - {name: ELASTICSEARCH_HOSTS, value: 'http://elasticsearch:9200'}
+            - {name: TELEMETRY_ENABLED, value: 'false'}
+            - {name: XPACK_SECURITY_ENABLED, value: 'false'}
+            - {name: NODE_OPTIONS, value: '--max-old-space-size=768'}
+          ports:
+            - {name: http, containerPort: 5601}
+          resources:
+            requests: {cpu: 250m, memory: 768Mi}
+            limits: {cpu: '2', memory: 1536Mi}
+          readinessProbe:
+            httpGet: {path: /api/status, port: http}
+            initialDelaySeconds: 30
+            timeoutSeconds: 5

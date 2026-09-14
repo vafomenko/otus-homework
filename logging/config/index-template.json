@@ -1,0 +1,30 @@
+{
+  "index_patterns": ["fluent-bit-logs-*"],
+  "priority": 200,
+  "template": {
+    "settings": {"number_of_shards": 1, "number_of_replicas": 0},
+    "mappings": {
+      "properties": {
+        "@timestamp": {"type": "date"},
+        "service": {"type": "keyword"},
+        "level": {"type": "keyword"},
+        "event": {"type": "keyword"},
+        "user_id": {"type": "long"},
+        "request_id": {"type": "keyword"},
+        "method": {"type": "keyword"},
+        "path": {"type": "keyword"},
+        "ip": {"type": "keyword"},
+        "status_code": {"type": "integer"},
+        "message": {"type": "text"},
+        "kubernetes": {
+          "properties": {
+            "namespace_name": {"type": "keyword"},
+            "pod_name": {"type": "keyword"},
+            "container_name": {"type": "keyword"},
+            "labels": {"type": "flattened"}
+          }
+        }
+      }
+    }
+  }
+}

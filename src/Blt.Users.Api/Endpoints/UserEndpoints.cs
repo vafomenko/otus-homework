@@ -23,7 +23,9 @@ public static class UserEndpoints
     {
         try
         {
-            return Results.Ok(await repository.ListAsync(cancellationToken));
+            var users = await repository.ListAsync(cancellationToken);
+            loggerFactory.CreateLogger("Users").LogInformation("{event}: listed users", "users_listed");
+            return Results.Ok(users);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -31,7 +33,7 @@ public static class UserEndpoints
         }
         catch (Exception exception)
         {
-            loggerFactory.CreateLogger("Users").LogError(exception, "Unable to list users.");
+            loggerFactory.CreateLogger("Users").LogError(exception, "{event}: unable to list users.", "database_error");
             return ServiceUnavailable();
         }
     }
@@ -45,6 +47,7 @@ public static class UserEndpoints
         try
         {
             var user = await repository.GetAsync(id, cancellationToken);
+            loggerFactory.CreateLogger("Users").Log(user is null ? LogLevel.Warning : LogLevel.Information, "{event}: user {user_id}", user is null ? "user_not_found" : "user_read", id);
             return user is null
                 ? NotFound(id)
                 : Results.Ok(user);
@@ -55,7 +58,7 @@ public static class UserEndpoints
         }
         catch (Exception exception)
         {
-            loggerFactory.CreateLogger("Users").LogError(exception, "Unable to get user {UserId}.", id);
+            loggerFactory.CreateLogger("Users").LogError(exception, "{event}: unable to get user {user_id}.", "database_error", id);
             return ServiceUnavailable();
         }
     }
@@ -69,6 +72,7 @@ public static class UserEndpoints
         var validationError = UserValidation.ValidateCreate(request);
         if (validationError is not null)
         {
+            loggerFactory.CreateLogger("Users").LogWarning("{event}: {reason}", "validation_failed", validationError);
             return BadRequest(validationError);
         }
 
@@ -77,10 +81,12 @@ public static class UserEndpoints
             var user = await repository.CreateAsync(
                 UserValidation.Normalize(request!),
                 cancellationToken);
+            loggerFactory.CreateLogger("Users").LogInformation("{event}: created user {user_id}", "user_created", user.Id);
             return Results.Created($"/user/{user.Id}", user);
         }
         catch (UserConflictException exception)
         {
+            loggerFactory.CreateLogger("Users").LogWarning("{event}: user already exists", "user_conflict");
             return Results.Conflict(new ErrorResponse(409, exception.Message));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -89,7 +95,7 @@ public static class UserEndpoints
         }
         catch (Exception exception)
         {
-            loggerFactory.CreateLogger("Users").LogError(exception, "Unable to create user.");
+            loggerFactory.CreateLogger("Users").LogError(exception, "{event}: unable to create user.", "database_error");
             return ServiceUnavailable();
         }
     }
@@ -104,6 +110,7 @@ public static class UserEndpoints
         var validationError = UserValidation.ValidateUpdate(request);
         if (validationError is not null)
         {
+            loggerFactory.CreateLogger("Users").LogWarning("{event}: {reason}", "validation_failed", validationError);
             return BadRequest(validationError);
         }
 
@@ -113,12 +120,14 @@ public static class UserEndpoints
                 id,
                 UserValidation.Normalize(request!),
                 cancellationToken);
+            loggerFactory.CreateLogger("Users").Log(user is null ? LogLevel.Warning : LogLevel.Information, "{event}: user {user_id}", user is null ? "user_not_found" : "user_updated", id);
             return user is null
                 ? NotFound(id)
                 : Results.Ok(user);
         }
         catch (UserConflictException exception)
         {
+            loggerFactory.CreateLogger("Users").LogWarning("{event}: user already exists", "user_conflict");
             return Results.Conflict(new ErrorResponse(409, exception.Message));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -127,7 +136,7 @@ public static class UserEndpoints
         }
         catch (Exception exception)
         {
-            loggerFactory.CreateLogger("Users").LogError(exception, "Unable to update user {UserId}.", id);
+            loggerFactory.CreateLogger("Users").LogError(exception, "{event}: unable to update user {user_id}.", "database_error", id);
             return ServiceUnavailable();
         }
     }
@@ -140,7 +149,9 @@ public static class UserEndpoints
     {
         try
         {
-            return await repository.DeleteAsync(id, cancellationToken)
+            var deleted = await repository.DeleteAsync(id, cancellationToken);
+            loggerFactory.CreateLogger("Users").Log(deleted ? LogLevel.Information : LogLevel.Warning, "{event}: user {user_id}", deleted ? "user_deleted" : "user_not_found", id);
+            return deleted
                 ? Results.NoContent()
                 : NotFound(id);
         }
@@ -150,7 +161,7 @@ public static class UserEndpoints
         }
         catch (Exception exception)
         {
-            loggerFactory.CreateLogger("Users").LogError(exception, "Unable to delete user {UserId}.", id);
+            loggerFactory.CreateLogger("Users").LogError(exception, "{event}: unable to delete user {user_id}.", "database_error", id);
             return ServiceUnavailable();
         }
     }

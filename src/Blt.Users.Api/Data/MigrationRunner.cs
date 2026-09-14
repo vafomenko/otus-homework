@@ -10,6 +10,7 @@ public sealed class MigrationRunner(
 
     public async Task RunAsync(CancellationToken cancellationToken = default)
     {
+        logger.LogInformation("{event}: migration Job started", "migration_started");
         Exception? lastException = null;
 
         for (var attempt = 1; attempt <= 30; attempt++)
@@ -17,20 +18,21 @@ public sealed class MigrationRunner(
             try
             {
                 await ApplyOnceAsync(cancellationToken);
-                logger.LogInformation("Database migrations completed.");
+                logger.LogInformation("{event}: migration Job completed", "migration_completed");
                 return;
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 throw;
             }
-            catch (Exception exception) when (attempt < 30)
+            catch (Exception exception)
             {
                 lastException = exception;
+                if (attempt == 30) break;
                 logger.LogWarning(
                     exception,
-                    "Database is unavailable; migration retry {Attempt}/30.",
-                    attempt);
+                    "{event}: database unavailable; migration retry {attempt}/30.",
+                    "migration_retry", attempt);
                 await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
             }
         }

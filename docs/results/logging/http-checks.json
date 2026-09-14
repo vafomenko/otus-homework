@@ -1,0 +1,57 @@
+{
+  "user_id": 44673,
+  "finishedAt": "2026-09-14T17:55:48.5419981Z",
+  "checks": [
+    {
+      "method": "POST",
+      "status": 201,
+      "path": "/user"
+    },
+    {
+      "method": "GET",
+      "status": 200,
+      "path": "/user"
+    },
+    {
+      "method": "GET",
+      "status": 200,
+      "path": "/user/44673"
+    },
+    {
+      "method": "PUT",
+      "status": 200,
+      "path": "/user/44673"
+    },
+    {
+      "method": "POST",
+      "status": 409,
+      "path": "/user"
+    },
+    {
+      "method": "POST",
+      "status": 400,
+      "path": "/user"
+    },
+    {
+      "method": "POST",
+      "status": 400,
+      "path": "/user"
+    },
+    {
+      "method": "DELETE",
+      "status": 204,
+      "path": "/user/44673"
+    },
+    {
+      "method": "GET",
+      "status": 404,
+      "path": "/user/44673"
+    },
+    {
+      "method": "GET",
+      "status": 500,
+      "path": "/user"
+    }
+  ],
+  "startedAt": "2026-09-14T17:55:48.3597888Z"
+}

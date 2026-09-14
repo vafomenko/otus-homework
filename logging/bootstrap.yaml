@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: elasticsearch-bootstrap
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 900
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: template
+          image: curlimages/curl:8.16.0
+          command: [sh, -ec]
+          args:
+            - |
+              until curl -fsS http://elasticsearch:9200/_cluster/health >/dev/null; do sleep 2; done
+              curl -fsS -X PUT http://elasticsearch:9200/_index_template/homework-logs \
+                -H 'Content-Type: application/json' --data-binary @/config/index-template.json
+          volumeMounts:
+            - {name: config, mountPath: /config, readOnly: true}
+      volumes:
+        - name: config
+          configMap: {name: elasticsearch-template}

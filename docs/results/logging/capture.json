@@ -1,0 +1,20 @@
+{
+  "capturedAt": "2026-09-14T18:05:00.720Z",
+  "kibana": "http://localhost:5601",
+  "user_id": 44673,
+  "browserErrors": [
+    "Not Found",
+    "Not Found",
+    "Not Found",
+    "Not Found",
+    "Not Found",
+    "Not Found"
+  ],
+  "httpErrors": [
+    "404 http://localhost:5601/internal/security/user_profile?dataPath=userSettings",
+    "404 http://localhost:5601/internal/security/user_profile?dataPath=avatar%2CuserSettings",
+    "500 http://localhost:5601/api/streams/_status",
+    "500 http://localhost:5601/internal/elastic_assistant/capabilities",
+    "404 http://localhost:5601/internal/security/user_profile?dataPath=avatar"
+  ]
+}

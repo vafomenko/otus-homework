@@ -33,8 +33,8 @@ if ($clusters -notcontains 'otus-hw5') {
 function Kube([string[]]$Arguments) { Run kubectl (@('--kubeconfig',$configPath) + $Arguments) }
 function Helm([string[]]$Arguments) { Run $helmPath (@('--kubeconfig',$configPath) + $Arguments) }
 
-if (-not $SkipBuild) { Run docker @('build','--platform','linux/amd64','--tag','vafomenko/blt-users-api:5.0.0','.') }
-Run $kindPath @('load','docker-image','vafomenko/blt-users-api:5.0.0','--name','otus-hw5')
+if (-not $SkipBuild) { Run docker @('build','--platform','linux/amd64','--tag','vafomenko/blt-users-api:6.0.0','.') }
+Run $kindPath @('load','docker-image','vafomenko/blt-users-api:6.0.0','--name','otus-hw5')
 Helm @('repo','add','ingress-nginx','https://kubernetes.github.io/ingress-nginx','--force-update')
 Helm @('upgrade','--install','ingress-nginx','ingress-nginx/ingress-nginx','--version','4.15.1','--namespace','ingress-nginx','--create-namespace','--values','infra/nginx-ingress.yaml','--wait','--timeout','5m')
 Kube @('apply','-f','infra/postgresql.yaml')

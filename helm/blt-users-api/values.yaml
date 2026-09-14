@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: vafomenko/blt-users-api
-  tag: "5.0.0"
+  tag: "6.0.0"
   pullPolicy: IfNotPresent
 
 nameOverride: ""

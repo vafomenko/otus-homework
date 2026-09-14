@@ -1,0 +1,1325 @@
+{
+  "checkedAt": "2026-09-14T18:02:11Z",
+  "elasticsearch": {
+    "cluster_name": "docker-cluster",
+    "status": "green",
+    "timed_out": false,
+    "number_of_nodes": 1,
+    "number_of_data_nodes": 1,
+    "active_primary_shards": 38,
+    "active_shards": 38,
+    "relocating_shards": 0,
+    "initializing_shards": 0,
+    "unassigned_shards": 0,
+    "unassigned_primary_shards": 0,
+    "delayed_unassigned_shards": 0,
+    "number_of_pending_tasks": 0,
+    "number_of_in_flight_fetch": 0,
+    "task_max_waiting_in_queue_millis": 0,
+    "active_shards_percent_as_number": 100.0
+  },
+  "resources": [
+    {
+      "namespace": "blt",
+      "kind": "Pod",
+      "name": "blt-users-api-5547f6c856-9vhhb",
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:55:50Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:55:49Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:04Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:04Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:55:49Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "50m",
+              "memory": "64Mi"
+            },
+            "containerID": "containerd://c8988fec511703129a20e9de38be6efdbe55417b3920b61717a4406bf21cab2a",
+            "image": "docker.io/vafomenko/blt-users-api:6.0.0",
+            "imageID": "docker.io/library/import-2026-09-14@sha256:4d3deb33db240a06388272574b2d22eb293e7006214e8eddb78b81d5301c8ac7",
+            "lastState": {},
+            "name": "api",
+            "ready": true,
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "256Mi"
+              },
+              "requests": {
+                "cpu": "50m",
+                "memory": "64Mi"
+              }
+            },
+            "restartCount": 0,
+            "started": true,
+            "state": {
+              "running": {
+                "startedAt": "2026-09-14T17:55:49Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 1654,
+                "supplementalGroups": [
+                  1654
+                ],
+                "uid": 1654
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/tmp",
+                "name": "tmp"
+              }
+            ]
+          }
+        ],
+        "hostIP": "192.168.128.2",
+        "hostIPs": [
+          {
+            "ip": "192.168.128.2"
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Running",
+        "podIP": "10.244.0.26",
+        "podIPs": [
+          {
+            "ip": "10.244.0.26"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-09-14T17:55:49Z"
+      },
+      "images": [
+        "vafomenko/blt-users-api:6.0.0"
+      ]
+    },
+    {
+      "namespace": "blt",
+      "kind": "Pod",
+      "name": "blt-users-api-5547f6c856-wbnph",
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:55:55Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:55:55Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:07Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:07Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:55:55Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "50m",
+              "memory": "64Mi"
+            },
+            "containerID": "containerd://8dbe5a9de4e6bfd819c19567ed48dc961b0c509c6a29a1d0fbff4e3ea413cae0",
+            "image": "docker.io/vafomenko/blt-users-api:6.0.0",
+            "imageID": "docker.io/library/import-2026-09-14@sha256:4d3deb33db240a06388272574b2d22eb293e7006214e8eddb78b81d5301c8ac7",
+            "lastState": {},
+            "name": "api",
+            "ready": true,
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "256Mi"
+              },
+              "requests": {
+                "cpu": "50m",
+                "memory": "64Mi"
+              }
+            },
+            "restartCount": 0,
+            "started": true,
+            "state": {
+              "running": {
+                "startedAt": "2026-09-14T17:55:55Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 1654,
+                "supplementalGroups": [
+                  1654
+                ],
+                "uid": 1654
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/tmp",
+                "name": "tmp"
+              }
+            ]
+          }
+        ],
+        "hostIP": "192.168.128.2",
+        "hostIPs": [
+          {
+            "ip": "192.168.128.2"
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Running",
+        "podIP": "10.244.0.28",
+        "podIPs": [
+          {
+            "ip": "10.244.0.28"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-09-14T17:55:55Z"
+      },
+      "images": [
+        "vafomenko/blt-users-api:6.0.0"
+      ]
+    },
+    {
+      "namespace": "blt",
+      "kind": "Pod",
+      "name": "blt-users-api-migrations-6wnqn",
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:54:33Z",
+            "observedGeneration": 1,
+            "status": "False",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:54:30Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:54:32Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:54:32Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:54:30Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "50m",
+              "memory": "64Mi"
+            },
+            "containerID": "containerd://229d3b1f4ff2ba879d51d4eb7b4da9f7d9f917ab76c3b224ffc6c576e06ea29b",
+            "image": "docker.io/vafomenko/blt-users-api:6.0.0",
+            "imageID": "docker.io/library/import-2026-09-14@sha256:4d3deb33db240a06388272574b2d22eb293e7006214e8eddb78b81d5301c8ac7",
+            "lastState": {},
+            "name": "migrate",
+            "ready": false,
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "256Mi"
+              },
+              "requests": {
+                "cpu": "50m",
+                "memory": "64Mi"
+              }
+            },
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://229d3b1f4ff2ba879d51d4eb7b4da9f7d9f917ab76c3b224ffc6c576e06ea29b",
+                "exitCode": 0,
+                "finishedAt": "2026-09-14T17:54:31Z",
+                "reason": "Completed",
+                "startedAt": "2026-09-14T17:54:31Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 1654,
+                "supplementalGroups": [
+                  1654
+                ],
+                "uid": 1654
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/tmp",
+                "name": "tmp"
+              }
+            ]
+          }
+        ],
+        "hostIP": "192.168.128.2",
+        "hostIPs": [
+          {
+            "ip": "192.168.128.2"
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Succeeded",
+        "qosClass": "Burstable",
+        "startTime": "2026-09-14T17:54:30Z"
+      },
+      "images": [
+        "vafomenko/blt-users-api:6.0.0"
+      ]
+    },
+    {
+      "namespace": "blt",
+      "kind": "Pod",
+      "name": "postgres-exporter-77985cc79f-cr5lc",
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T07:47:51Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-07T18:20:44Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:07Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:07Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-07T18:20:44Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "20m",
+              "memory": "32Mi"
+            },
+            "containerID": "containerd://fdf05665b2fcb48389fd228a0e248a13b68b5eae01a4a7975cf286104f0efa72",
+            "image": "quay.io/prometheuscommunity/postgres-exporter:v0.20.1",
+            "imageID": "quay.io/prometheuscommunity/postgres-exporter@sha256:ac5ec343104fae0e2d84a27bb8d69b38430a11910c5382cad85d478d2bab713e",
+            "lastState": {
+              "terminated": {
+                "containerID": "containerd://092b5fbbc2a2f3f339547785eae9de6562ce5beccd0708045504072707d79ae7",
+                "exitCode": 255,
+                "finishedAt": "2026-09-14T07:47:44Z",
+                "reason": "Unknown",
+                "startedAt": "2026-09-13T07:38:11Z"
+              }
+            },
+            "name": "exporter",
+            "ready": true,
+            "resources": {
+              "limits": {
+                "cpu": "200m",
+                "memory": "128Mi"
+              },
+              "requests": {
+                "cpu": "20m",
+                "memory": "32Mi"
+              }
+            },
+            "restartCount": 7,
+            "started": true,
+            "state": {
+              "running": {
+                "startedAt": "2026-09-14T07:47:50Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 65534,
+                "supplementalGroups": [
+                  65534
+                ],
+                "uid": 65534
+              }
+            }
+          }
+        ],
+        "hostIP": "192.168.128.2",
+        "hostIPs": [
+          {
+            "ip": "192.168.128.2"
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Running",
+        "podIP": "10.244.0.2",
+        "podIPs": [
+          {
+            "ip": "10.244.0.2"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-09-07T18:20:44Z"
+      },
+      "images": [
+        "quay.io/prometheuscommunity/postgres-exporter:v0.20.1"
+      ]
+    },
+    {
+      "namespace": "blt",
+      "kind": "Pod",
+      "name": "users-db-0",
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T07:47:52Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-07T18:20:49Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:03Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:03Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-07T18:20:49Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            },
+            "containerID": "containerd://a7048d135d6a6f04d1ff0a59561393959756e03aca2cc8b3e5ad82bb5823a65f",
+            "image": "docker.io/library/postgres:17.6-alpine",
+            "imageID": "sha256:d741b376874687de90374fd34f55c6b2760e8f7bd7e4ae5cd47f50757fc08cf8",
+            "lastState": {
+              "terminated": {
+                "containerID": "containerd://f04859d94b8e6dc630bf600d9c296206c8e27f8b84f9d0d7dec7d8d8092640db",
+                "exitCode": 255,
+                "finishedAt": "2026-09-14T07:47:44Z",
+                "reason": "Unknown",
+                "startedAt": "2026-09-13T07:38:02Z"
+              }
+            },
+            "name": "postgres",
+            "ready": true,
+            "resources": {
+              "limits": {
+                "cpu": "1",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "100m",
+                "memory": "128Mi"
+              }
+            },
+            "restartCount": 7,
+            "started": true,
+            "state": {
+              "running": {
+                "startedAt": "2026-09-14T07:47:51Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 0,
+                "supplementalGroups": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  6,
+                  10,
+                  11,
+                  20,
+                  26,
+                  27
+                ],
+                "uid": 0
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/postgresql/data",
+                "name": "data"
+              },
+              {
+                "mountPath": "/docker-entrypoint-initdb.d",
+                "name": "init"
+              }
+            ]
+          }
+        ],
+        "hostIP": "192.168.128.2",
+        "hostIPs": [
+          {
+            "ip": "192.168.128.2"
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Running",
+        "podIP": "10.244.0.10",
+        "podIPs": [
+          {
+            "ip": "10.244.0.10"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-09-07T18:20:49Z"
+      },
+      "images": [
+        "postgres:17.6-alpine"
+      ]
+    },
+    {
+      "namespace": "blt",
+      "kind": "Deployment",
+      "name": "blt-users-api",
+      "status": {
+        "availableReplicas": 2,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-09-07T18:24:12Z",
+            "lastUpdateTime": "2026-09-14T17:56:01Z",
+            "message": "ReplicaSet \"blt-users-api-5547f6c856\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          },
+          {
+            "lastTransitionTime": "2026-09-14T18:00:07Z",
+            "lastUpdateTime": "2026-09-14T18:00:07Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          }
+        ],
+        "observedGeneration": 3,
+        "readyReplicas": 2,
+        "replicas": 2,
+        "updatedReplicas": 2
+      }
+    },
+    {
+      "namespace": "blt",
+      "kind": "Deployment",
+      "name": "postgres-exporter",
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-09-07T18:20:44Z",
+            "lastUpdateTime": "2026-09-07T18:22:59Z",
+            "message": "ReplicaSet \"postgres-exporter-77985cc79f\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          },
+          {
+            "lastTransitionTime": "2026-09-14T18:00:07Z",
+            "lastUpdateTime": "2026-09-14T18:00:07Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "namespace": "blt",
+      "kind": "StatefulSet",
+      "name": "users-db",
+      "status": {
+        "availableReplicas": 1,
+        "collisionCount": 0,
+        "currentReplicas": 1,
+        "currentRevision": "users-db-6f876bd744",
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updateRevision": "users-db-6f876bd744",
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "namespace": "blt",
+      "kind": "Job",
+      "name": "blt-users-api-migrations",
+      "status": {
+        "completionTime": "2026-09-14T17:54:34Z",
+        "conditions": [
+          {
+            "lastProbeTime": "2026-09-14T17:54:34Z",
+            "lastTransitionTime": "2026-09-14T17:54:34Z",
+            "message": "Reached expected number of succeeded pods",
+            "reason": "CompletionsReached",
+            "status": "True",
+            "type": "SuccessCriteriaMet"
+          },
+          {
+            "lastProbeTime": "2026-09-14T17:54:34Z",
+            "lastTransitionTime": "2026-09-14T17:54:34Z",
+            "message": "Reached expected number of succeeded pods",
+            "reason": "CompletionsReached",
+            "status": "True",
+            "type": "Complete"
+          }
+        ],
+        "ready": 0,
+        "startTime": "2026-09-14T17:54:30Z",
+        "succeeded": 1,
+        "terminating": 0,
+        "uncountedTerminatedPods": {}
+      }
+    },
+    {
+      "namespace": "blt",
+      "kind": "PersistentVolumeClaim",
+      "name": "data-users-db-0",
+      "status": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "capacity": {
+          "storage": "1Gi"
+        },
+        "phase": "Bound"
+      }
+    },
+    {
+      "namespace": "logging",
+      "kind": "Pod",
+      "name": "elasticsearch-0",
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:53:18Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:53:17Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:00Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:00Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:53:17Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "250m",
+              "memory": "1Gi"
+            },
+            "containerID": "containerd://4dee62e1581044c0ec538e5473d0bee8e07eb398a79cdfa59d2cb65847a6e545",
+            "image": "docker.elastic.co/elasticsearch/elasticsearch:8.19.3",
+            "imageID": "docker.io/library/import-2026-09-14@sha256:d3c4a5bddf6e2cefb8a4db41a905f46e0f4e2824efe998b34d2c29af93cde2e7",
+            "lastState": {},
+            "name": "elasticsearch",
+            "ready": true,
+            "resources": {
+              "limits": {
+                "cpu": "2",
+                "memory": "1536Mi"
+              },
+              "requests": {
+                "cpu": "250m",
+                "memory": "1Gi"
+              }
+            },
+            "restartCount": 0,
+            "started": true,
+            "state": {
+              "running": {
+                "startedAt": "2026-09-14T17:53:18Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 1000,
+                "supplementalGroups": [
+                  0,
+                  1000
+                ],
+                "uid": 1000
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/usr/share/elasticsearch/data",
+                "name": "data"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-2mrc2",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "hostIP": "192.168.128.2",
+        "hostIPs": [
+          {
+            "ip": "192.168.128.2"
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Running",
+        "podIP": "10.244.0.20",
+        "podIPs": [
+          {
+            "ip": "10.244.0.20"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-09-14T17:53:17Z"
+      },
+      "images": [
+        "docker.elastic.co/elasticsearch/elasticsearch:8.19.3"
+      ]
+    },
+    {
+      "namespace": "logging",
+      "kind": "Pod",
+      "name": "elasticsearch-bootstrap-c9c57",
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:53:43Z",
+            "observedGeneration": 1,
+            "status": "False",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:52:08Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:53:42Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:53:42Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:52:08Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "containerID": "containerd://c0ccd3d2363cb463bf633eeef4cb6a72eaf55b782b82b2f956a3f5d369e11a2f",
+            "image": "docker.io/curlimages/curl:8.16.0",
+            "imageID": "sha256:51674a38c3309d85352d13cf0955f588d7fe6a49cbb0c8b049c544c36441f6dc",
+            "lastState": {},
+            "name": "template",
+            "ready": false,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://c0ccd3d2363cb463bf633eeef4cb6a72eaf55b782b82b2f956a3f5d369e11a2f",
+                "exitCode": 0,
+                "finishedAt": "2026-09-14T17:53:41Z",
+                "reason": "Completed",
+                "startedAt": "2026-09-14T17:52:09Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 102,
+                "supplementalGroups": [
+                  102
+                ],
+                "uid": 101
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/config",
+                "name": "config",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-klxdl",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "hostIP": "192.168.128.2",
+        "hostIPs": [
+          {
+            "ip": "192.168.128.2"
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Succeeded",
+        "qosClass": "BestEffort",
+        "startTime": "2026-09-14T17:52:08Z"
+      },
+      "images": [
+        "curlimages/curl:8.16.0"
+      ]
+    },
+    {
+      "namespace": "logging",
+      "kind": "Pod",
+      "name": "fluent-bit-fcql4",
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:58:39Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:58:39Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:01Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:01Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:58:38Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "50m",
+              "memory": "64Mi"
+            },
+            "containerID": "containerd://dc681f82f6b55e1aa09dbed44eb07f32847f4d56cafa534c9ad928222c8bb2cb",
+            "image": "cr.fluentbit.io/fluent/fluent-bit:4.0.9",
+            "imageID": "sha256:7aeaaebf1aef7d6ec36188089965e006b2291b08a668bc0f981918345e8fa6ca",
+            "lastState": {},
+            "name": "fluent-bit",
+            "ready": true,
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "256Mi"
+              },
+              "requests": {
+                "cpu": "50m",
+                "memory": "64Mi"
+              }
+            },
+            "restartCount": 0,
+            "started": true,
+            "state": {
+              "running": {
+                "startedAt": "2026-09-14T17:58:39Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 0,
+                "supplementalGroups": [
+                  0
+                ],
+                "uid": 0
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/log",
+                "name": "logs",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              },
+              {
+                "mountPath": "/var/lib/docker/containers",
+                "name": "docker",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              },
+              {
+                "mountPath": "/fluent-bit/etc",
+                "name": "config",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              },
+              {
+                "mountPath": "/var/lib/fluent-bit",
+                "name": "state"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-dzzpv",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "hostIP": "192.168.128.2",
+        "hostIPs": [
+          {
+            "ip": "192.168.128.2"
+          }
+        ],
+        "initContainerStatuses": [
+          {
+            "containerID": "containerd://800ada554e8b264017712fde7eda4fd8b03f2dc9a4d342298c1a4b85a17d3844",
+            "image": "docker.io/curlimages/curl:8.16.0",
+            "imageID": "sha256:51674a38c3309d85352d13cf0955f588d7fe6a49cbb0c8b049c544c36441f6dc",
+            "lastState": {},
+            "name": "wait-for-template",
+            "ready": true,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://800ada554e8b264017712fde7eda4fd8b03f2dc9a4d342298c1a4b85a17d3844",
+                "exitCode": 0,
+                "finishedAt": "2026-09-14T17:58:39Z",
+                "reason": "Completed",
+                "startedAt": "2026-09-14T17:58:39Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 102,
+                "supplementalGroups": [
+                  102
+                ],
+                "uid": 101
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-dzzpv",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Running",
+        "podIP": "10.244.0.31",
+        "podIPs": [
+          {
+            "ip": "10.244.0.31"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-09-14T17:58:38Z"
+      },
+      "images": [
+        "cr.fluentbit.io/fluent/fluent-bit:4.0.9"
+      ]
+    },
+    {
+      "namespace": "logging",
+      "kind": "Pod",
+      "name": "kibana-bd8998c8-jtkqq",
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:52:08Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:52:07Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:06Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T18:00:06Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-09-14T17:52:07Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "250m",
+              "memory": "768Mi"
+            },
+            "containerID": "containerd://48189b904069331b61aa249f8dbb4b1b14d3d181217a24bb8145e4c979f0bfb9",
+            "image": "docker.elastic.co/kibana/kibana:8.19.3",
+            "imageID": "docker.io/library/import-2026-09-14@sha256:8269edf3156b8977a94151554728d899ebd8f5636666c25d23f0300d44793f66",
+            "lastState": {},
+            "name": "kibana",
+            "ready": true,
+            "resources": {
+              "limits": {
+                "cpu": "2",
+                "memory": "1536Mi"
+              },
+              "requests": {
+                "cpu": "250m",
+                "memory": "768Mi"
+              }
+            },
+            "restartCount": 0,
+            "started": true,
+            "state": {
+              "running": {
+                "startedAt": "2026-09-14T17:52:07Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 1000,
+                "supplementalGroups": [
+                  0,
+                  1000
+                ],
+                "uid": 1000
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-vmgt8",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "hostIP": "192.168.128.2",
+        "hostIPs": [
+          {
+            "ip": "192.168.128.2"
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Running",
+        "podIP": "10.244.0.18",
+        "podIPs": [
+          {
+            "ip": "10.244.0.18"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-09-14T17:52:07Z"
+      },
+      "images": [
+        "docker.elastic.co/kibana/kibana:8.19.3"
+      ]
+    },
+    {
+      "namespace": "logging",
+      "kind": "Deployment",
+      "name": "kibana",
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-09-14T17:52:07Z",
+            "lastUpdateTime": "2026-09-14T17:53:58Z",
+            "message": "ReplicaSet \"kibana-bd8998c8\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          },
+          {
+            "lastTransitionTime": "2026-09-14T18:00:07Z",
+            "lastUpdateTime": "2026-09-14T18:00:07Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "namespace": "logging",
+      "kind": "StatefulSet",
+      "name": "elasticsearch",
+      "status": {
+        "availableReplicas": 1,
+        "collisionCount": 0,
+        "currentReplicas": 1,
+        "currentRevision": "elasticsearch-5ccc997bcf",
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updateRevision": "elasticsearch-5ccc997bcf",
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "namespace": "logging",
+      "kind": "DaemonSet",
+      "name": "fluent-bit",
+      "status": {
+        "currentNumberScheduled": 1,
+        "desiredNumberScheduled": 1,
+        "numberAvailable": 1,
+        "numberMisscheduled": 0,
+        "numberReady": 1,
+        "observedGeneration": 5,
+        "updatedNumberScheduled": 1
+      }
+    },
+    {
+      "namespace": "logging",
+      "kind": "Job",
+      "name": "elasticsearch-bootstrap",
+      "status": {
+        "completionTime": "2026-09-14T18:00:01Z",
+        "conditions": [
+          {
+            "lastProbeTime": "2026-09-14T17:53:44Z",
+            "lastTransitionTime": "2026-09-14T17:53:44Z",
+            "message": "Reached expected number of succeeded pods",
+            "reason": "CompletionsReached",
+            "status": "True",
+            "type": "SuccessCriteriaMet"
+          },
+          {
+            "lastProbeTime": "2026-09-14T18:00:01Z",
+            "lastTransitionTime": "2026-09-14T18:00:01Z",
+            "message": "Reached expected number of succeeded pods",
+            "reason": "CompletionsReached",
+            "status": "True",
+            "type": "Complete"
+          }
+        ],
+        "failed": 1,
+        "ready": 0,
+        "startTime": "2026-09-14T17:46:52Z",
+        "succeeded": 1,
+        "terminating": 0,
+        "uncountedTerminatedPods": {}
+      }
+    },
+    {
+      "namespace": "logging",
+      "kind": "PersistentVolumeClaim",
+      "name": "data-elasticsearch-0",
+      "status": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "capacity": {
+          "storage": "5Gi"
+        },
+        "phase": "Bound"
+      }
+    }
+  ]
+}
