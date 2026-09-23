@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1040" viewBox="0 0 1500 1040" role="img" aria-labelledby="title desc">
+  <title id="title">Безопасный доступ к профилю — архитектура ДЗ № 7</title>
+  <desc id="desc">Клиент обращается через nginx-ingress к двум репликам .NET API. Аутентификация проверяет сессии PostgreSQL, авторизация сверяет владельца профиля. Пароли и токены хранятся только в виде хешей. Выход удаляет сессию.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#395774"/></marker>
+    <style>
+      text { font-family: 'Segoe UI', Arial, sans-serif; fill: #182f46; }
+      .title { font-size: 32px; font-weight: 700; }
+      .subtitle { font-size: 18px; fill: #536c82; }
+      .heading { font-size: 22px; font-weight: 700; }
+      .body { font-size: 18px; }
+      .small { font-size: 16px; fill: #536c82; }
+      .label { font-size: 16px; font-weight: 600; fill: #284c6e; }
+      .wire { stroke: #395774; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1500" height="1040" fill="#f4f7fa"/>
+  <text x="54" y="62" class="title">Доступ к профилю: только владелец</text>
+  <text x="54" y="97" class="subtitle">ДЗ № 7 · .NET 10 · PostgreSQL · nginx-ingress · arch.homework</text>
+
+  <rect x="345" y="139" width="1100" height="501" rx="20" fill="#fff" stroke="#cfdae4" stroke-width="2"/>
+  <text x="369" y="170" class="small">Kubernetes</text>
+
+  <rect x="54" y="255" width="239" height="186" rx="16" fill="#e2ecf7" stroke="#b5cbe2"/>
+  <text x="77" y="294" class="heading">Клиент</text>
+  <text x="77" y="326" class="body">Postman / Newman</text>
+  <text x="77" y="361" class="small">Логин + пароль → вход</text>
+  <text x="77" y="389" class="small">Authorization: Bearer</text>
+  <text x="77" y="414" class="small">→ запросы профиля</text>
+
+  <rect x="377" y="255" width="220" height="186" rx="16" fill="#e4f2ec" stroke="#b1d5c2"/>
+  <text x="398" y="294" class="heading">nginx-ingress</text>
+  <text x="398" y="326" class="body">API Gateway</text>
+  <text x="398" y="361" class="small">Host: arch.homework</text>
+  <text x="398" y="389" class="small">Маршрутизация / TLS</text>
+  <text x="398" y="414" class="small">namespace: ingress-nginx</text>
+
+  <rect x="651" y="196" width="420" height="393" rx="16" fill="#edf2ff" stroke="#bdc9e7" stroke-width="2"/>
+  <text x="674" y="233" class="heading">blt-users-api · 2 реплики</text>
+  <text x="674" y="262" class="small">ClusterIP :8000 · namespace: blt</text>
+  <rect x="674" y="286" width="374" height="111" rx="10" fill="#fff" stroke="#ccd6ed"/>
+  <text x="692" y="317" class="body" font-weight="600">Аутентификация</text>
+  <text x="692" y="345" class="small">/auth/register · /auth/login · /auth/logout</text>
+  <text x="692" y="373" class="small">Хеш токена + срок сессии → user_id</text>
+  <path d="M860 399V423" class="wire"/>
+  <rect x="674" y="430" width="374" height="136" rx="10" fill="#fff" stroke="#ccd6ed"/>
+  <text x="692" y="461" class="body" font-weight="600">Авторизация → профиль</text>
+  <text x="692" y="490" class="small">/user/{id}: id == user_id сессии</text>
+  <text x="692" y="517" class="small">/profile: user_id только из сессии</text>
+  <text x="692" y="544" class="small">Те же проверки на всех старых URL</text>
+
+  <rect x="1141" y="229" width="273" height="309" rx="16" fill="#fff4df" stroke="#e1c99a"/>
+  <text x="1164" y="268" class="heading">PostgreSQL</text>
+  <text x="1164" y="296" class="small">users-db:5432 · blt · PVC</text>
+  <text x="1164" y="337" class="body" font-weight="600">users</text>
+  <text x="1164" y="362" class="small">Поля профиля</text>
+  <text x="1164" y="400" class="body" font-weight="600">user_credentials</text>
+  <text x="1164" y="425" class="small">PBKDF2 + случайная соль</text>
+  <text x="1164" y="465" class="body" font-weight="600">user_sessions</text>
+  <text x="1164" y="490" class="small">SHA-256 токена, user_id,</text>
+  <text x="1164" y="515" class="small">expires_at · TTL 60 минут</text>
+
+  <path d="M293 316H373" class="wire"/>
+  <text x="305" y="301" class="label">HTTP*</text>
+  <path d="M597 316H647" class="wire"/>
+  <path d="M1071 343H1137" class="wire"/>
+  <path d="M1071 491H1137" class="wire"/>
+  <text x="1084" y="327" class="small">SQL</text>
+  <path d="M651 602H323V389H297" class="wire"/>
+  <text x="385" y="587" class="label">200 / 201 / 204 · 401 · 403</text>
+  <text x="1149" y="580" class="small">Job миграций:</text>
+  <text x="1149" y="605" class="small">001_users → 002_authentication</text>
+
+  <text x="54" y="692" class="heading">Последовательность взаимодействия</text>
+  <rect x="54" y="715" width="1391" height="229" rx="16" fill="#fff" stroke="#cfdae4"/>
+  <text x="78" y="753" class="body"><tspan font-weight="700">1. Регистрация.</tspan> Клиент → ingress → API → одна транзакция: профиль + хеш пароля → 201.</text>
+  <text x="78" y="793" class="body"><tspan font-weight="700">2. Вход.</tspan> API проверяет пароль → создаёт случайный токен 256 бит → сохраняет его хеш → 200 + токен.</text>
+  <text x="78" y="833" class="body"><tspan font-weight="700">3. Профиль.</tspan> API проверяет сессию → сверяет владельца → читает / изменяет свою запись → 200.</text>
+  <text x="78" y="873" class="body"><tspan font-weight="700">4. Отказ.</tspan> Нет действующей сессии → 401. Чужой ID → 403 до чтения профиля или проверки тела.</text>
+  <text x="78" y="913" class="body"><tspan font-weight="700">5. Выход.</tspan> DELETE сессии в PostgreSQL → 204. Повторный запрос с тем же токеном → 401 на любой реплике.</text>
+  <text x="54" y="984" class="small">* Локальный стенд: 127.0.0.1:8087. Для внешнего доступа — HTTPS на ingress. Пароли и токены не попадают в серверные логи.</text>
+  <text x="54" y="1012" class="small">Gateway передаёт запросы; решение о доступе принимает API. Прямой доступ к Service проходит те же проверки.</text>
+</svg>

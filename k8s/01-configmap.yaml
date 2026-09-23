@@ -13,3 +13,5 @@ data:
   Database__Port: "5432"
   Database__Name: users
   Database__SslMode: Disable
+  Session__LifetimeMinutes: "60"
+  Observability__EnableFaultInjection: "false"

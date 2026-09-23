@@ -1,0 +1,93 @@
+Set kubectl context to "kind-otus-hw7"
+Image: "vafomenko/blt-users-api:7.0.0" with ID "sha256:6794648c5f1e4114f7039ca4832577c86039acbaaaac9b917a4b092d00c24112" not yet present on node "otus-hw7-control-plane", loading...
+"ingress-nginx" has been added to your repositories
+Release "ingress-nginx" has been upgraded. Happy Helming!
+NAME: ingress-nginx
+LAST DEPLOYED: Wed Sep 23 00:39:23 2026
+NAMESPACE: ingress-nginx
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+NOTES:
+The ingress-nginx controller has been installed.
+Get the application URL by running these commands:
+  export HTTP_NODE_PORT=30080
+  export HTTPS_NODE_PORT=$(kubectl get service --namespace ingress-nginx ingress-nginx-controller --output jsonpath="{.spec.ports[1].nodePort}")
+  export NODE_IP="$(kubectl get nodes --output jsonpath="{.items[0].status.addresses[1].address}")"
+
+  echo "Visit http://${NODE_IP}:${HTTP_NODE_PORT} to access your application via HTTP."
+  echo "Visit https://${NODE_IP}:${HTTPS_NODE_PORT} to access your application via HTTPS."
+
+An example Ingress that makes use of the controller:
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: example
+    namespace: foo
+  spec:
+    ingressClassName: nginx
+    rules:
+      - host: www.example.com
+        http:
+          paths:
+            - pathType: Prefix
+              backend:
+                service:
+                  name: exampleService
+                  port:
+                    number: 80
+              path: /
+    # This section is only required if TLS is to be enabled for the Ingress
+    tls:
+      - hosts:
+        - www.example.com
+        secretName: example-tls
+
+If TLS is enabled for the Ingress, a Secret containing the certificate and key must also be provided:
+
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: example-tls
+    namespace: foo
+  data:
+    tls.crt: <base64 encoded cert>
+    tls.key: <base64 encoded key>
+  type: kubernetes.io/tls
+namespace/blt unchanged
+secret/postgres-demo configured
+configmap/postgres-init unchanged
+service/users-db unchanged
+statefulset.apps/users-db configured
+deployment.apps/postgres-exporter unchanged
+service/postgres-exporter unchanged
+partitioned roll out complete: 1 new pods have been updated...
+Release "blt-users-api" has been upgraded. Happy Helming!
+NAME: blt-users-api
+LAST DEPLOYED: Wed Sep 23 00:39:33 2026
+NAMESPACE: blt
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+NOTES:
+API профилей доступен по адресу:
+  http://arch.homework/profile
+
+Регистрация: POST /auth/register. Вход: POST /auth/login.
+Для профиля необходим заголовок Authorization: Bearer <accessToken>.
+
+Миграция выполняется как pre-install/pre-upgrade hook. После успешного
+завершения Job хранится сутки для сбора логов Fluent Bit. Посмотреть hook-манифест можно так:
+  helm get hooks blt-users-api --namespace blt
+deployment.apps/blt-users-api restarted
+Waiting for deployment "blt-users-api" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "blt-users-api" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "blt-users-api" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "blt-users-api" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "blt-users-api" rollout to finish: 1 old replicas are pending termination...
+deployment "blt-users-api" successfully rolled out
+API: http://127.0.0.1:8087 (Host: arch.homework)
+Application and PostgreSQL namespace: blt; gateway namespace: ingress-nginx.
+Run: ./scripts/test-auth.ps1 -BaseUrl http://127.0.0.1:8087

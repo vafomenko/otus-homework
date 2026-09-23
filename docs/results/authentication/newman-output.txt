@@ -1,0 +1,610 @@
+newman
+
+OTUS Homework 7 - Authentication and private profiles
+
+→ 01. Регистрация пользователя 1
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/auth/registe
+  │ r'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_1_39eb6d10db5c4c3996
+  │ b690d42c0a0004","password":"[REDACTED]","firstName":"I
+  │ sidro","lastName":"Hansen","email":"hw7_39eb6d10db5c4c
+  │ 3996b690d42c0a0004@example.com","phone":"+79380027104"
+  │ }'
+  └
+  POST http://127.0.0.1:8087/auth/register [201 Created, 420B, 446ms]
+  ┌
+  │ 'RESPONSE', 201, 'Created'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 5 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","Location":"/user/3","X
+  │ -Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":3,"username":"hw7_1_39eb6d10db
+  │ 5c4c3996b690d42c0a0004","firstName":"Isidro","lastName
+  │ ":"Hansen","email":"hw7_39eb6d10db5c4c3996b690d42c0a00
+  │ 04@example.com","phone":"+79380027104"}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 201
+  √  Создан пользователь 1
+  √  Профиль не содержит секретов
+
+→ 02. Чтение без логина запрещено
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/user/3'
+  │ 'REQUEST HEADERS', '{"Host":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/user/3 [401 Unauthorized, 298B, 17ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 5 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","WWW-Authenticate":"Bea
+  │ rer","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Authenticatio
+  │ n required."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 03. Изменение без логина запрещено
+  ┌
+  │ 'REQUEST', 'PUT', 'http://127.0.0.1:8087/user/3'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"firstName":"Anonymous intrusion"}'
+  └
+  PUT http://127.0.0.1:8087/user/3 [401 Unauthorized, 298B, 10ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 5 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","WWW-Authenticate":"Bea
+  │ rer","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Authenticatio
+  │ n required."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 04. Поддельный заголовок пользователя запрещён
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/profile'
+  │ 'REQUEST HEADERS', '{"X-User-Id":"3","Host":"arch.home
+  │ work"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/profile [401 Unauthorized, 298B, 5ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 5 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","WWW-Authenticate":"Bea
+  │ rer","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Authenticatio
+  │ n required."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 05. Неверный пароль
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/auth/login'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_1_39eb6d10db5c4c3996
+  │ b690d42c0a0004","password":"[REDACTED]"}'
+  └
+  POST http://127.0.0.1:8087/auth/login [401 Unauthorized, 277B, 137ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 5 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Invalid usern
+  │ ame or password."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 06. Вход пользователя 1
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/auth/login'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_1_39eb6d10db5c4c3996
+  │ b690d42c0a0004","password":"[REDACTED]"}'
+  └
+  POST http://127.0.0.1:8087/auth/login [200 OK, 353B, 365ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 6 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"accessToken":"[REDACTED]","tokenTy
+  │ pe":"Bearer","expiresAt":"2026-09-22T22:41:46.035615+0
+  │ 0:00","userId":3}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Токен принадлежит пользователю 1
+
+→ 07. Изменение профиля пользователя 1
+  ┌
+  │ 'REQUEST', 'PUT', 'http://127.0.0.1:8087/user/3'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Authorization":"[REDACTED]","Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"firstName":"Updated_Jarret","lastNa
+  │ me":"Updated_Lynch","email":"b77248e8-43f6-4950-b48c-c
+  │ 9988cc316de@example.com","phone":"+79678034618"}'
+  └
+  PUT http://127.0.0.1:8087/user/3 [200 OK, 411B, 13ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 6 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":3,"username":"hw7_1_39eb6d10db
+  │ 5c4c3996b690d42c0a0004","firstName":"Updated_Jarret","
+  │ lastName":"Updated_Lynch","email":"b77248e8-43f6-4950-
+  │ b48c-c9988cc316de@example.com","phone":"+79678034618"}
+  │ '
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Профиль не содержит секретов
+  √  Обновлён свой профиль
+
+→ 08. Проверка сохранённых изменений
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/user/3'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/user/3 [200 OK, 411B, 17ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 6 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":3,"username":"hw7_1_39eb6d10db
+  │ 5c4c3996b690d42c0a0004","firstName":"Updated_Jarret","
+  │ lastName":"Updated_Lynch","email":"b77248e8-43f6-4950-
+  │ b48c-c9988cc316de@example.com","phone":"+79678034618"}
+  │ '
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Профиль не содержит секретов
+  √  Все изменения сохранены
+
+→ 09. Собственный профиль без ID
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/profile'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/profile [200 OK, 411B, 8ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 6 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":3,"username":"hw7_1_39eb6d10db
+  │ 5c4c3996b690d42c0a0004","firstName":"Updated_Jarret","
+  │ lastName":"Updated_Lynch","email":"b77248e8-43f6-4950-
+  │ b48c-c9988cc316de@example.com","phone":"+79678034618"}
+  │ '
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  ID определяется сессией
+  √  Профиль не содержит секретов
+
+→ 10. Выход пользователя 1
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/auth/logout'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  POST http://127.0.0.1:8087/auth/logout [204 No Content, 146B, 8ms]
+  ┌
+  │ 'RESPONSE', 204, 'No Content'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 6 GMT","Connection":"keep-alive","Cache-Control":"no-s
+  │ tore","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', ''
+  └
+  √  Ответ не кешируется
+  √  HTTP 204
+  √  Тело пустое
+
+→ 11. Старый токен больше не читает профиль
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/user/3'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/user/3 [401 Unauthorized, 298B, 7ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 6 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","WWW-Authenticate":"Bea
+  │ rer","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Authenticatio
+  │ n required."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 12. Старый токен больше не изменяет профиль
+  ┌
+  │ 'REQUEST', 'PUT', 'http://127.0.0.1:8087/user/3'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Authorization":"[REDACTED]","Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"firstName":"Revoked intrusion"}'
+  └
+  PUT http://127.0.0.1:8087/user/3 [401 Unauthorized, 298B, 5ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 6 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","WWW-Authenticate":"Bea
+  │ rer","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Authenticatio
+  │ n required."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 13. Регистрация пользователя 2
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/auth/registe
+  │ r'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_2_c1c62e3b0f344819ac
+  │ 9860da72c5e973","password":"[REDACTED]","firstName":"E
+  │ rnestina","lastName":"Kunze","email":"hw7_c1c62e3b0f34
+  │ 4819ac9860da72c5e973@example.com","phone":"+7930604716
+  │ 7"}'
+  └
+  POST http://127.0.0.1:8087/auth/register [201 Created, 422B, 120ms]
+  ┌
+  │ 'RESPONSE', 201, 'Created'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 6 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","Location":"/user/4","X
+  │ -Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":4,"username":"hw7_2_c1c62e3b0f
+  │ 344819ac9860da72c5e973","firstName":"Ernestina","lastN
+  │ ame":"Kunze","email":"hw7_c1c62e3b0f344819ac9860da72c5
+  │ e973@example.com","phone":"+79306047167"}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 201
+  √  Создан другой пользователь
+  √  Профиль не содержит секретов
+
+→ 14. Вход пользователя 2
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/auth/login'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_2_c1c62e3b0f344819ac
+  │ 9860da72c5e973","password":"[REDACTED]"}'
+  └
+  POST http://127.0.0.1:8087/auth/login [200 OK, 354B, 151ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 7 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"accessToken":"[REDACTED]","tokenTy
+  │ pe":"Bearer","expiresAt":"2026-09-22T22:41:47.0270713+
+  │ 00:00","userId":4}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Токен принадлежит пользователю 2
+
+→ 15. Пользователь 2 не читает профиль 1
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/user/3'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/user/3 [403 Forbidden, 291B, 5ms]
+  ┌
+  │ 'RESPONSE', 403, 'Forbidden'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 7 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', `{"code":403,"message":"Access to ano
+  │ ther user's profile is forbidden."}`
+  └
+  √  Ответ не кешируется
+  √  HTTP 403
+  √  Отказ не раскрывает профиль
+
+→ 16. Пользователь 2 не изменяет профиль 1
+  ┌
+  │ 'REQUEST', 'PUT', 'http://127.0.0.1:8087/user/3'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Authorization":"[REDACTED]","Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"firstName":"Cross-user intrusion","
+  │ email":"hw7_c1c62e3b0f344819ac9860da72c5e973@example.c
+  │ om"}'
+  └
+  PUT http://127.0.0.1:8087/user/3 [403 Forbidden, 291B, 5ms]
+  ┌
+  │ 'RESPONSE', 403, 'Forbidden'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 7 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', `{"code":403,"message":"Access to ano
+  │ ther user's profile is forbidden."}`
+  └
+  √  Ответ не кешируется
+  √  HTTP 403
+  √  Отказ не раскрывает профиль
+
+→ 17. Альтернативный URL защищён
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/api/v1/users/
+  │ 3'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/api/v1/users/3 [403 Forbidden, 291B, 4ms]
+  ┌
+  │ 'RESPONSE', 403, 'Forbidden'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 7 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', `{"code":403,"message":"Access to ano
+  │ ther user's profile is forbidden."}`
+  └
+  √  Ответ не кешируется
+  √  HTTP 403
+  √  Отказ не раскрывает профиль
+
+→ 18. Альтернативный URL запрещает изменение
+  ┌
+  │ 'REQUEST', 'PUT', 'http://127.0.0.1:8087/v1/user/3'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Authorization":"[REDACTED]","Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"firstName":"Alias intrusion"}'
+  └
+  PUT http://127.0.0.1:8087/v1/user/3 [403 Forbidden, 291B, 4ms]
+  ┌
+  │ 'RESPONSE', 403, 'Forbidden'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 7 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', `{"code":403,"message":"Access to ano
+  │ ther user's profile is forbidden."}`
+  └
+  √  Ответ не кешируется
+  √  HTTP 403
+  √  Отказ не раскрывает профиль
+
+→ 19. Удаление чужого профиля запрещено
+  ┌
+  │ 'REQUEST', 'DELETE', 'http://127.0.0.1:8087/user/3'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  DELETE http://127.0.0.1:8087/user/3 [403 Forbidden, 291B, 4ms]
+  ┌
+  │ 'RESPONSE', 403, 'Forbidden'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 7 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', `{"code":403,"message":"Access to ano
+  │ ther user's profile is forbidden."}`
+  └
+  √  Ответ не кешируется
+  √  HTTP 403
+  √  Отказ не раскрывает профиль
+
+→ 20. Список не раскрывает других пользователей
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/users'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/users [200 OK, 400B, 5ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 7 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '[{"id":4,"username":"hw7_2_c1c62e3b0
+  │ f344819ac9860da72c5e973","firstName":"Ernestina","last
+  │ Name":"Kunze","email":"hw7_c1c62e3b0f344819ac9860da72c
+  │ 5e973@example.com","phone":"+79306047167"}]'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  В списке только пользователь 2
+
+→ 21. Пользователь 2 читает собственный профиль
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/profile'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/profile [200 OK, 398B, 5ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 7 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":4,"username":"hw7_2_c1c62e3b0f
+  │ 344819ac9860da72c5e973","firstName":"Ernestina","lastN
+  │ ame":"Kunze","email":"hw7_c1c62e3b0f344819ac9860da72c5
+  │ e973@example.com","phone":"+79306047167"}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Данные пользователя 2 доступны ему
+  √  Профиль не содержит секретов
+
+→ 22. Повторный вход пользователя 1
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/auth/login'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_1_39eb6d10db5c4c3996
+  │ b690d42c0a0004","password":"[REDACTED]"}'
+  └
+  POST http://127.0.0.1:8087/auth/login [200 OK, 354B, 143ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 7 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"accessToken":"[REDACTED]","tokenTy
+  │ pe":"Bearer","expiresAt":"2026-09-22T22:41:47.8422129+
+  │ 00:00","userId":3}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Токен принадлежит пользователю 1
+
+→ 23. Чужие попытки не изменили профиль 1
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/profile'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/profile [200 OK, 411B, 5ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 7 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":3,"username":"hw7_1_39eb6d10db
+  │ 5c4c3996b690d42c0a0004","firstName":"Updated_Jarret","
+  │ lastName":"Updated_Lynch","email":"b77248e8-43f6-4950-
+  │ b48c-c9988cc316de@example.com","phone":"+79678034618"}
+  │ '
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Профиль 1 не повреждён
+  √  Профиль не содержит секретов
+
+→ 24. Очистка профиля пользователя 1
+  ┌
+  │ 'REQUEST', 'DELETE', 'http://127.0.0.1:8087/user/3'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  DELETE http://127.0.0.1:8087/user/3 [204 No Content, 146B, 8ms]
+  ┌
+  │ 'RESPONSE', 204, 'No Content'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 8 GMT","Connection":"keep-alive","Cache-Control":"no-s
+  │ tore","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', ''
+  └
+  √  Ответ не кешируется
+  √  HTTP 204
+
+→ 25. Очистка профиля пользователя 2
+  ┌
+  │ 'REQUEST', 'DELETE', 'http://127.0.0.1:8087/user/4'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  DELETE http://127.0.0.1:8087/user/4 [204 No Content, 146B, 7ms]
+  ┌
+  │ 'RESPONSE', 204, 'No Content'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:4
+  │ 8 GMT","Connection":"keep-alive","Cache-Control":"no-s
+  │ tore","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', ''
+  └
+  √  Ответ не кешируется
+  √  HTTP 204
+
+┌─────────────────────────┬───────────────────┬───────────────────┐
+│                         │          executed │            failed │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│              iterations │                 1 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│                requests │                25 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│            test-scripts │                50 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│      prerequest-scripts │                25 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│              assertions │                80 │                 0 │
+├─────────────────────────┴───────────────────┴───────────────────┤
+│ total run duration: 3.5s                                        │
+├─────────────────────────────────────────────────────────────────┤
+│ total data received: 2.61kB (approx)                            │
+├─────────────────────────────────────────────────────────────────┤
+│ average response time: 60ms [min: 4ms, max: 446ms, s.d.: 113ms] │
+└─────────────────────────────────────────────────────────────────┘

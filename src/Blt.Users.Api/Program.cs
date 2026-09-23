@@ -3,6 +3,10 @@ using System.Text.Json.Serialization;
 using Blt.Users.Api.Data;
 using Blt.Users.Api.Endpoints;
 using Blt.Users.Api.Observability;
+using Blt.Users.Api.Security;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Prometheus;
 
 var migrationMode = args.Any(static argument =>
@@ -23,6 +27,7 @@ builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.AddServerHeader = false;
+    options.Limits.MaxRequestBodySize = 16 * 1024;
     options.ListenAnyIP(8000);
 });
 
@@ -39,6 +44,34 @@ builder.Services.AddSingleton<DbConnectionFactory>();
 builder.Services.AddSingleton<MigrationRunner>();
 builder.Services.AddSingleton<DatabaseReadiness>();
 builder.Services.AddSingleton<UserRepository>();
+builder.Services.AddSingleton<AuthRepository>();
+builder.Services.AddSingleton<PasswordService>();
+builder.Services.AddOptions<AuthSessionOptions>().BindConfiguration("Session")
+    .Validate(options => options.LifetimeMinutes is >= 1 and <= 1440, "Session lifetime must be between 1 and 1440 minutes.")
+    .ValidateOnStart();
+builder.Services.AddAuthentication(SessionAuthenticationHandler.SchemeName)
+    .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(SessionAuthenticationHandler.SchemeName, _ => { });
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+    options.AddPolicy(ProfileOwner.PolicyName, policy =>
+        policy.RequireAuthenticatedUser().RequireAssertion(ProfileOwner.IsOwner));
+});
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("credentials", limiter =>
+    {
+        limiter.PermitLimit = 30;
+        limiter.Window = TimeSpan.FromMinutes(1);
+        limiter.QueueLimit = 0;
+    });
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.Headers.RetryAfter = "60";
+        await context.HttpContext.Response.WriteAsJsonAsync(new ErrorResponse(429, "Too many authentication attempts."), cancellationToken);
+    };
+});
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<ApiMetrics>();
 
@@ -70,20 +103,30 @@ app.UseRouting();
 app.UseMiddleware<ApiMetricsMiddleware>();
 app.UseExceptionHandler();
 app.UseMiddleware<RequestLoggingMiddleware>();
+app.Use(async (context, next) =>
+{
+    // Profile and token responses must not be retained by shared caches.
+    context.Response.Headers.CacheControl = "no-store";
+    context.Response.Headers.XContentTypeOptions = "nosniff";
+    await next(context);
+});
 if (builder.Configuration.GetValue<bool>("Observability:EnableFaultInjection"))
 {
     app.UseMiddleware<DemoFaultMiddleware>();
 }
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // A registry per application also isolates WebApplicationFactory test hosts.
-app.MapMetrics("/metrics", app.Services.GetRequiredService<ApiMetrics>().Registry);
+app.MapMetrics("/metrics", app.Services.GetRequiredService<ApiMetrics>().Registry).AllowAnonymous();
 
 // ASP.NET Core treats a trailing slash as optional, therefore each endpoint is
 // deliberately mapped only once. Both /health and /health/ are accepted.
 app.MapGet(
         "/health/",
         static () => TypedResults.Ok(new HealthResponse("OK")))
-    .WithName("GetHealth");
+    .WithName("GetHealth").AllowAnonymous();
 
 app.MapGet(
     "/ready/",
@@ -105,7 +148,10 @@ app.MapGet(
                 new ErrorResponse(503, "Database is not ready."),
                 statusCode: StatusCodes.Status503ServiceUnavailable);
         }
-    });
+    }).AllowAnonymous();
+
+AuthEndpoints.Map(app);
+UserEndpoints.MapProfile(app);
 
 // The canonical contract is /user. The aliases keep compatibility with the
 // URL conventions used in the previous homework and common REST examples.

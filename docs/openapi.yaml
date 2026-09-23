@@ -1,114 +1,196 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: User Service
-  version: 1.0.0
-  description: RESTful CRUD API for users.
+  title: Private User Profile API
+  version: 7.0.0
+  description: >-
+    Registration, login, revocable bearer sessions and owner-only profiles.
+    All profile aliases share the same authorization policy. Usernames are case-sensitive.
 servers:
   - url: http://arch.homework
+security:
+  - sessionBearer: []
 paths:
-  /user:
-    get:
-      summary: List users
+  /auth/register:
+    post:
+      summary: Register a user without logging in
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+      responses:
+        '201':
+          description: Registered profile; credentials are never returned
+          headers:
+            Location:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /auth/login:
+    post:
+      summary: Verify credentials and create a session
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string, minLength: 1, maxLength: 256 }
+                password: { type: string, minLength: 1, maxLength: 128, format: password, writeOnly: true }
       responses:
         '200':
-          description: User list
+          description: Session issued; default lifetime 60 minutes
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accessToken, tokenType, expiresAt, userId]
+                properties:
+                  accessToken: { type: string, pattern: '^[A-Za-z0-9_-]{43}$' }
+                  tokenType: { type: string, enum: [Bearer] }
+                  expiresAt: { type: string, format: date-time }
+                  userId: { type: integer, format: int64 }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401':
+          description: Invalid username or password; identical error for unknown users
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /auth/logout:
+    post:
+      summary: Revoke the current session on all replicas
+      responses:
+        '204': { description: Session revoked }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /profile:
+    get:
+      summary: Read own profile using the session identity
+      responses:
+        '200': { $ref: '#/components/responses/Profile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+    put:
+      summary: Update own profile using the session identity
+      requestBody: { $ref: '#/components/requestBodies/UpdateProfile' }
+      responses:
+        '200': { $ref: '#/components/responses/Profile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /user:
+    get:
+      summary: List only the authenticated user's own profile
+      responses:
+        '200':
+          description: No other users are included
           content:
             application/json:
               schema:
                 type: array
-                items:
-                  $ref: '#/components/schemas/User'
-    post:
-      summary: Create user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateUser'
-            example:
-              username: johndoe589
-              firstName: John
-              lastName: Doe
-              email: bestjohn@doe.com
-              phone: '+71002003040'
-      responses:
-        '201':
-          description: User created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-  /user/{userId}:
+                maxItems: 1
+                items: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /user/{id}:
     parameters:
-      - name: userId
+      - name: id
         in: path
         required: true
-        schema:
-          type: integer
-          format: int64
+        schema: { type: integer, format: int64 }
     get:
-      summary: Get user by ID
+      summary: Read a profile only if the ID belongs to the session owner
       responses:
-        '200':
-          description: User found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '200': { $ref: '#/components/responses/Profile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
     put:
-      summary: Update user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateUser'
-            example:
-              firstName: Julie
-              lastName: Doe
-              email: bestjohn@doe.com
-              phone: '+71004242424'
+      summary: Update a profile only if the ID belongs to the session owner
+      requestBody: { $ref: '#/components/requestBodies/UpdateProfile' }
       responses:
-        '200':
-          description: User updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '200': { $ref: '#/components/responses/Profile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '503': { $ref: '#/components/responses/Unavailable' }
     delete:
-      summary: Delete user
+      summary: Delete own profile and all of its credentials and sessions
       responses:
-        '204':
-          description: User deleted
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '204': { description: Profile deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /health:
+    get:
+      summary: Liveness
+      security: []
+      responses:
+        '200': { description: API process is running }
+  /ready:
+    get:
+      summary: Database and authentication schema readiness
+      security: []
+      responses:
+        '200': { description: Ready }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /metrics:
+    get:
+      summary: Prometheus metrics without personal profile data
+      security: []
+      responses:
+        '200': { description: Prometheus exposition format }
 components:
+  securitySchemes:
+    sessionBearer:
+      type: http
+      scheme: bearer
+      description: Opaque session token from POST /auth/login; expiry and revocation checked in PostgreSQL
   schemas:
-    UserFields:
+    ProfileFields:
       type: object
       properties:
-        username: { type: string, maxLength: 256 }
-        firstName: { type: string }
-        lastName: { type: string }
-        email: { type: string, format: email }
-        phone: { type: string }
-    CreateUser:
+        username: { type: string, minLength: 1, maxLength: 256 }
+        firstName: { type: string, minLength: 1, maxLength: 256 }
+        lastName: { type: string, minLength: 1, maxLength: 256 }
+        email: { type: string, format: email, maxLength: 320 }
+        phone: { type: string, maxLength: 64, nullable: true }
+    Register:
       allOf:
-        - $ref: '#/components/schemas/UserFields'
-      required: [username, firstName, lastName, email]
-    UpdateUser:
+        - $ref: '#/components/schemas/ProfileFields'
+        - type: object
+          required: [username, password, firstName, lastName, email]
+          properties:
+            password: { type: string, format: password, minLength: 12, maxLength: 128, writeOnly: true }
+    UpdateProfile:
+      description: >-
+        At least one known non-null field is required. Omitted or null fields preserve
+        their previous values. Password and ID cannot be changed through this endpoint.
       allOf:
-        - $ref: '#/components/schemas/UserFields'
+        - $ref: '#/components/schemas/ProfileFields'
     User:
       allOf:
-        - $ref: '#/components/schemas/UserFields'
+        - $ref: '#/components/schemas/ProfileFields'
         - type: object
           required: [id, username, firstName, lastName, email]
           properties:
@@ -117,18 +199,61 @@ components:
       type: object
       required: [code, message]
       properties:
-        code: { type: integer, format: int32 }
+        code: { type: integer }
         message: { type: string }
+  requestBodies:
+    UpdateProfile:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/UpdateProfile' }
   responses:
+    Profile:
+      description: Own profile without credentials
+      headers:
+        Cache-Control:
+          schema: { type: string, example: no-store }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/User' }
     BadRequest:
       description: Invalid request
       content:
         application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    NotFound:
-      description: User not found
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Missing, invalid, expired or revoked session
+      headers:
+        WWW-Authenticate:
+          schema: { type: string, example: Bearer }
       content:
         application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Requested ID is not the session owner's ID; no profile data disclosed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Own profile was removed concurrently
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: Username or email already exists
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: Registration and login share a limit of 30 requests per minute per replica
+      headers:
+        Retry-After:
+          schema: { type: integer, example: 60 }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unavailable:
+      description: Database unavailable; access is denied
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }

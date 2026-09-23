@@ -1,5 +1,8 @@
-API пользователей доступен по адресу:
-  http://{{ .Values.ingress.host }}/user
+API профилей доступен по адресу:
+  http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.host }}/profile
+
+Регистрация: POST /auth/register. Вход: POST /auth/login.
+Для профиля необходим заголовок Authorization: Bearer <accessToken>.
 
 Миграция выполняется как pre-install/pre-upgrade hook. После успешного
 завершения Job хранится сутки для сбора логов Fluent Bit. Посмотреть hook-манифест можно так:

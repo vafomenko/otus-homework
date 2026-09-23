@@ -1,0 +1,1 @@
+{"migrations" : ["001_users", "002_authentication"], "users_after_cleanup" : 0, "credentials_after_cleanup" : 0, "sessions_after_cleanup" : 0}

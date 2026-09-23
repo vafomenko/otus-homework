@@ -35,10 +35,10 @@ public sealed class ObservabilityTests
         using var client = application.CreateClient();
         client.DefaultRequestHeaders.Add("X-Demo-Error", "500");
         using var body = new StringContent("{}", Encoding.UTF8, "application/json");
-        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsync("/user", body)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsync("/auth/register", body)).StatusCode);
         var metrics = await client.GetStringAsync("/metrics");
-        Assert.Contains("blt_http_requests_total{method=\"POST\",route=\"/user\",status_code=\"400\"} 1", metrics);
-        Assert.Contains("blt_http_requests_total{method=\"POST\",route=\"/user\",status_code=\"500\"} 0", metrics);
+        Assert.Contains("blt_http_requests_total{method=\"POST\",route=\"/auth/register\",status_code=\"400\"} 1", metrics);
+        Assert.Contains("blt_http_requests_total{method=\"POST\",route=\"/auth/register\",status_code=\"500\"} 0", metrics);
     }
 
     [Fact]

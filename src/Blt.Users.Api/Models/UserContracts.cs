@@ -41,7 +41,7 @@ public static class UserValidation
             request.LastName,
             request.Email,
             requireUsername: true,
-            requireNames: true);
+            requireNames: true) ?? ValidateContact(request.Email, request.Phone, requireEmail: true);
     }
 
     public static string? ValidateUpdate(UpdateUserRequest? request)
@@ -66,7 +66,7 @@ public static class UserValidation
             request.LastName,
             request.Email,
             requireUsername: false,
-            requireNames: false);
+            requireNames: false) ?? ValidateContact(request.Email, request.Phone, requireEmail: false);
     }
 
     public static CreateUserRequest Normalize(CreateUserRequest request)
@@ -138,5 +138,12 @@ public static class UserValidation
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static string? ValidateContact(string? email, string? phone, bool requireEmail)
+    {
+        if (requireEmail && string.IsNullOrWhiteSpace(email)) return "email is required.";
+        if (phone?.Trim().Length > 64) return "phone must contain at most 64 characters.";
+        return null;
     }
 }

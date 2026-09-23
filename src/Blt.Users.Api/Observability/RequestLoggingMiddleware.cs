@@ -1,3 +1,5 @@
+using Npgsql;
+
 namespace Blt.Users.Api.Observability;
 
 public sealed class RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
@@ -25,6 +27,12 @@ public sealed class RequestLoggingMiddleware(RequestDelegate next, ILogger<Reque
         {
             throw;
         }
+        catch (NpgsqlException exception)
+        {
+            logger.LogError(exception, "{event}: database request failed", "database_error");
+            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            await context.Response.WriteAsJsonAsync(new ErrorResponse(503, "Database is unavailable."));
+        }
         catch (Exception exception)
         {
             logger.LogError(exception, "{event}: unhandled application error", "application_error");
@@ -32,6 +40,8 @@ public sealed class RequestLoggingMiddleware(RequestDelegate next, ILogger<Reque
         }
         if (context.Response.StatusCode is 400 or 415 or 422)
             logger.LogWarning("{event}: request rejected ({status_code})", "validation_failed", context.Response.StatusCode);
+        else if (context.Response.StatusCode is 401 or 403)
+            logger.LogWarning("{event}: access denied ({status_code})", "access_denied", context.Response.StatusCode);
         else if (context.Response.StatusCode == 404)
             logger.LogWarning("{event}: resource not found", "resource_not_found");
         else if (context.Response.StatusCode >= 500)

@@ -7,22 +7,6 @@ namespace Blt.Users.Api.Data;
 
 public sealed class UserRepository(DbConnectionFactory connectionFactory)
 {
-    public async Task<IReadOnlyList<UserResponse>> ListAsync(CancellationToken cancellationToken)
-    {
-        await using var connection = await connectionFactory.OpenAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
-        command.CommandText = SelectColumns + " ORDER BY id;";
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        var users = new List<UserResponse>();
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            users.Add(ReadUser(reader));
-        }
-
-        return users;
-    }
-
     public async Task<UserResponse?> GetAsync(long id, CancellationToken cancellationToken)
     {
         await using var connection = await connectionFactory.OpenAsync(cancellationToken);
@@ -32,37 +16,6 @@ public sealed class UserRepository(DbConnectionFactory connectionFactory)
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         return await reader.ReadAsync(cancellationToken) ? ReadUser(reader) : null;
-    }
-
-    public async Task<UserResponse> CreateAsync(
-        CreateUserRequest request,
-        CancellationToken cancellationToken)
-    {
-        await using var connection = await connectionFactory.OpenAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
-        command.CommandText =
-            """
-            INSERT INTO users (username, first_name, last_name, email, phone)
-            VALUES (@username, @first_name, @last_name, @email, @phone)
-            RETURNING id, username, first_name, last_name, email, phone;
-            """;
-        AddText(command, "username", request.Username!);
-        AddText(command, "first_name", request.FirstName!);
-        AddText(command, "last_name", request.LastName!);
-        AddText(command, "email", request.Email!);
-        AddNullableText(command, "phone", request.Phone);
-
-        try
-        {
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            await reader.ReadAsync(cancellationToken);
-            return ReadUser(reader);
-        }
-        catch (PostgresException exception) when (
-            exception.SqlState == PostgresErrorCodes.UniqueViolation)
-        {
-            throw new UserConflictException("username or email already exists.", exception);
-        }
     }
 
     public async Task<UserResponse?> UpdateAsync(
@@ -111,14 +64,6 @@ public sealed class UserRepository(DbConnectionFactory connectionFactory)
         return await command.ExecuteNonQueryAsync(cancellationToken) == 1;
     }
 
-    public async Task PingAsync(CancellationToken cancellationToken)
-    {
-        await using var connection = await connectionFactory.OpenAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT 1;";
-        await command.ExecuteScalarAsync(cancellationToken);
-    }
-
     private const string SelectColumns =
         "SELECT id, username, first_name, last_name, email, phone FROM users";
 
@@ -136,11 +81,6 @@ public sealed class UserRepository(DbConnectionFactory connectionFactory)
     private static void AddBigint(NpgsqlCommand command, string name, long value)
     {
         command.Parameters.Add(new NpgsqlParameter(name, NpgsqlDbType.Bigint) { Value = value });
-    }
-
-    private static void AddText(NpgsqlCommand command, string name, string value)
-    {
-        command.Parameters.Add(new NpgsqlParameter(name, NpgsqlDbType.Varchar) { Value = value });
     }
 
     private static void AddNullableText(NpgsqlCommand command, string name, string? value)

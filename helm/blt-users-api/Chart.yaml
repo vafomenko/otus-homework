@@ -1,9 +1,9 @@
 apiVersion: v2
 name: blt-users-api
-description: RESTful User CRUD service with structured logging and Prometheus instrumentation
+description: Private user profiles with authentication, revocable sessions, logging and metrics
 type: application
-version: 1.2.0
-appVersion: "6.0.0"
+version: 1.3.0
+appVersion: "7.0.0"
 keywords:
   - otus
   - users

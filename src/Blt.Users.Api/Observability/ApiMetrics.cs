@@ -33,7 +33,9 @@ public sealed class ApiMetrics
 
         foreach (var (method, route) in new[]
         {
-            ("GET", "/user"), ("GET", "/user/{id}"), ("POST", "/user"),
+            ("POST", "/auth/register"), ("POST", "/auth/login"), ("POST", "/auth/logout"),
+            ("GET", "/profile"), ("PUT", "/profile"),
+            ("GET", "/user"), ("GET", "/user/{id}"),
             ("PUT", "/user/{id}"), ("DELETE", "/user/{id}")
         })
         {

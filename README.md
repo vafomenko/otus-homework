@@ -1,51 +1,52 @@
-# Домашнее задание № 6 — централизованное логирование EFK
+# Домашнее задание № 7 — аутентификация и авторизация
 
-Продолжение [CRUD из ДЗ № 4](docs/homework-4.md) и
-[мониторинга из ДЗ № 5](docs/homework-5.md). .NET 10 пишет JSON в stdout,
-Fluent Bit собирает контейнерные логи со всех нод Kubernetes, Elasticsearch
-хранит их, Kibana позволяет искать события и строить графики.
+Регистрация, вход, просмотр и изменение собственного профиля на .NET 10 и
+PostgreSQL. Без действующей сессии API возвращает **401**, при обращении к
+чужому профилю — **403**. Выход отзывает токен на всех репликах приложения.
 
 ## Материалы для сдачи
 
-- [Установка, namespaces, проверка и запросы в Kibana](docs/logging.md).
-- [EFK-манифесты и ConfigMap](logging/kustomization.yaml): Elasticsearch StatefulSet + PVC,
-  headless/ClusterIP Service, Kibana Deployment + NodePort, Fluent Bit DaemonSet + RBAC.
-- [Helm приложения](helm/blt-users-api) и [обычные манифесты](k8s).
-- [Data view, Discover-запросы и дашборд](logging/kibana/saved-objects.ndjson).
-- [Скриншоты Kibana](docs/screenshots/logging/README.md).
-- [Результаты проверки](docs/results/logging/README.md).
+- [Архитектура, установка, namespaces и запуск тестов](docs/authentication.md).
+- [Схема взаимодействия сервисов — PNG](docs/authentication-architecture.png)
+  и [исходник SVG](docs/authentication-architecture.svg).
+- [Helm-чарт](helm/blt-users-api) и [Kubernetes-манифесты](k8s).
+- [Postman-коллекция](postman/homework-7.postman_collection.json) и
+  [окружение](postman/homework-7.postman_environment.json): `baseUrl = http://arch.homework`.
+- [OpenAPI](docs/openapi.yaml).
+- [Результаты проверок](docs/results/authentication/README.md).
 
-## Запуск в существующем kind-кластере предыдущей работы
+![Схема взаимодействия сервисов](docs/authentication-architecture.png)
 
-Из корня репозитория, PowerShell 7, Docker Desktop запущен:
+## Локальный запуск
 
-```powershell
-# Создаёт logging и blt; EFK запускается до миграций приложения.
-./scripts/setup-logging.ps1
-kubectl --kubeconfig .local/kubeconfig -n logging port-forward svc/kibana-service 5601:5601
-```
-
-Kibana: <http://localhost:5601>. В отдельном терминале:
+Из корня репозитория, PowerShell, Docker Desktop запущен:
 
 ```powershell
-python scripts/configure-kibana.py
-kubectl --kubeconfig .local/kubeconfig -n blt port-forward svc/blt-users-api 8000:8000
-# Ещё в одном терминале:
-./scripts/test-logging.ps1
+./scripts/setup-auth.ps1
+./scripts/test-auth.ps1 -BaseUrl http://127.0.0.1:8087
 ```
 
-Для нового Minikube, установки из обычных манифестов и генерации скриншотов
-см. [полную инструкцию](docs/logging.md). Образ `6.0.0` собирается локально;
-его нужно загрузить в kind/Minikube, публикация в Docker Hub не требуется.
+Первый скрипт создаёт отдельный kind-кластер `otus-hw7`, собирает и загружает
+образ `7.0.0`, устанавливает nginx-ingress в **`ingress-nginx`**, PostgreSQL и
+приложение в **`blt`**. Используется `.local/kubeconfig-auth`.
+Коллекция передаёт `Host: arch.homework`; изменять системный hosts для этого
+запуска не требуется. Newman выводит данные запросов и ответов, маскируя секреты.
 
-| События | Уровень | Поля для поиска |
-|---|---|---|
-| Старт и штатная остановка | INFO | `event: application_*` |
-| HTTP-запрос и ответ | INFO | `method`, `path`, `ip`, `request_id`, `status_code` |
-| CRUD | INFO | `event: user_created/user_read/user_updated/user_deleted`, `user_id` |
-| Валидация, конфликт, отсутствующий пользователь | WARN | `event`, `reason`, `user_id` |
-| Сбой БД или приложения | ERROR | `event: database_error/application_error/http_error`, `exception_type`, `stack_trace` |
-| Запуск/окончание миграций | INFO | `event: migration_started/migration_completed`, `kubernetes.pod_name` |
+Команда установки приложения в подготовленный кластер с PostgreSQL:
 
-В Kibana 8 раздел **Index Patterns** называется **Data Views**. Используется
-`fluent-bit-logs-*` с полем времени `@timestamp`.
+```powershell
+helm upgrade --install blt-users-api ./helm/blt-users-api --namespace blt --create-namespace --wait --timeout 5m
+```
+
+Подготовка образа, БД, установка ingress и вариант из манифестов описаны
+в [инструкции](docs/authentication.md). HTTP используется для локального стенда;
+внешний доступ требует HTTPS.
+
+Автотесты с временной PostgreSQL в Docker:
+
+```powershell
+dotnet test Blt.slnx
+```
+
+Предыдущие работы: [ДЗ № 4](docs/homework-4.md), [ДЗ № 5](docs/homework-5.md),
+[ДЗ № 6](docs/homework-6.md). Их коллекции CRUD относятся к API до введения авторизации.

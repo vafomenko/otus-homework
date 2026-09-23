@@ -11,6 +11,7 @@ COPY src/Blt.Users.Api/Blt.Users.Api.csproj src/Blt.Users.Api/
 RUN dotnet restore src/Blt.Users.Api/Blt.Users.Api.csproj -a "$TARGETARCH"
 
 COPY src/Blt.Users.Api/ src/Blt.Users.Api/
+COPY db/migrations/ db/migrations/
 
 RUN dotnet publish src/Blt.Users.Api/Blt.Users.Api.csproj \
     --configuration Release \

@@ -1,0 +1,18 @@
+NAME                                     READY   STATUS      RESTARTS   AGE
+pod/blt-users-api-548f77895c-l699r       1/1     Running     0          97s
+pod/blt-users-api-548f77895c-mct2m       1/1     Running     0          91s
+pod/blt-users-api-migrations-rm75h       0/1     Completed   0          100s
+pod/postgres-exporter-77985cc79f-tshcg   1/1     Running     0          13m
+pod/users-db-0                           1/1     Running     0          13m
+
+NAME                        TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/blt-users-api       ClusterIP   10.96.45.28     <none>        8000/TCP   6m13s
+service/postgres-exporter   ClusterIP   10.96.131.237   <none>        9187/TCP   13m
+service/users-db            ClusterIP   10.96.61.129    <none>        5432/TCP   13m
+
+NAME                                              CLASS   HOSTS           ADDRESS        PORTS   AGE
+ingress.networking.k8s.io/blt-users-api           nginx   arch.homework   10.96.226.25   80      6m13s
+ingress.networking.k8s.io/blt-users-api-rewrite   nginx   arch.homework   10.96.226.25   80      6m13s
+
+NAME                                 STATUS     COMPLETIONS   DURATION   AGE
+job.batch/blt-users-api-migrations   Complete   1/1           3s         100s

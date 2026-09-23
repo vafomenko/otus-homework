@@ -1,0 +1,940 @@
+{
+  "info": {
+    "_postman_id": "2813d137-acb6-4a4d-8ad7-272ff601cb30",
+    "name": "OTUS Homework 7 - Authentication and private profiles",
+    "description": "Регистрация → запрет без логина → вход → изменение → чтение → выход и отзыв токена → второй пользователь и запрет чужого профиля. Случайные данные создаются на каждой итерации. Общие скрипты выводят метод, URL, заголовки, тело запроса и ответ в Newman; пароли и bearer-токены маскируются.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.info.requestName === '01. Регистрация пользователя 1') {",
+          "  ['userId1','userId2','token1','token2','freshToken1'].forEach(key => pm.collectionVariables.unset(key));",
+          "  for (const n of [1, 2]) {",
+          "    const id = pm.variables.replaceIn('{{$guid}}').replace(/-/g, '');",
+          "    pm.collectionVariables.set('username' + n, 'hw7_' + n + '_' + id);",
+          "    pm.collectionVariables.set('password' + n, 'Secure!' + pm.variables.replaceIn('{{$guid}}'));",
+          "    pm.collectionVariables.set('email' + n, 'hw7_' + id + '@example.com');",
+          "    pm.collectionVariables.set('firstName' + n, pm.variables.replaceIn('{{$randomFirstName}}'));",
+          "    pm.collectionVariables.set('lastName' + n, pm.variables.replaceIn('{{$randomLastName}}'));",
+          "    pm.collectionVariables.set('phone' + n, '+79' + String(Math.floor(Math.random() * 1e9)).padStart(9, '0'));",
+          "  }",
+          "  pm.collectionVariables.set('updatedFirstName', 'Updated_' + pm.variables.replaceIn('{{$randomFirstName}}'));",
+          "  pm.collectionVariables.set('updatedLastName', 'Updated_' + pm.variables.replaceIn('{{$randomLastName}}'));",
+          "  pm.collectionVariables.set('updatedEmail', pm.variables.replaceIn('{{$guid}}') + '@example.com');",
+          "  pm.collectionVariables.set('updatedPhone', '+79' + String(Math.floor(Math.random() * 1e9)).padStart(9, '0'));",
+          "}",
+          "pm.request.headers.upsert({ key: 'Host', value: 'arch.homework' });",
+          "const resolved = value => pm.variables.replaceIn(String(value));",
+          "const safeHeaders = {};",
+          "pm.request.headers.each(h => { if (!h.disabled) safeHeaders[h.key] = /authorization|cookie/i.test(h.key) ? '[REDACTED]' : resolved(h.value); });",
+          "let body = pm.request.body && pm.request.body.raw ? resolved(pm.request.body.raw) : '';",
+          "try { body = JSON.parse(body); if (body.password) body.password = '[REDACTED]'; } catch (_) {}",
+          "console.log('REQUEST', pm.request.method, resolved(pm.request.url.toString()));",
+          "console.log('REQUEST HEADERS', JSON.stringify(safeHeaders));",
+          "console.log('REQUEST BODY', typeof body === 'string' ? body : JSON.stringify(body));"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "let body = pm.response.text();",
+          "try { body = JSON.parse(body); if (body.accessToken) body.accessToken = '[REDACTED]'; } catch (_) {}",
+          "const headers = {}; pm.response.headers.each(h => { headers[h.key] = /set-cookie/i.test(h.key) ? '[REDACTED]' : h.value; });",
+          "console.log('RESPONSE', pm.response.code, pm.response.status);",
+          "console.log('RESPONSE HEADERS', JSON.stringify(headers));",
+          "console.log('RESPONSE BODY', typeof body === 'string' ? body : JSON.stringify(body));",
+          "pm.test('Ответ не кешируется', () => pm.expect(pm.response.headers.get('Cache-Control')).to.include('no-store'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://arch.homework",
+      "type": "string"
+    },
+    {
+      "key": "userId1",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId2",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token1",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token2",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "freshToken1",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Регистрация пользователя 1",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username1}}\",\n  \"password\": \"{{password1}}\",\n  \"firstName\": \"{{firstName1}}\",\n  \"lastName\": \"{{lastName1}}\",\n  \"email\": \"{{email1}}\",\n  \"phone\": \"{{phone1}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/auth/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('userId1', pm.response.json().id);",
+              "pm.test('Создан пользователь 1', () => pm.expect(pm.response.json().username).to.eql(pm.collectionVariables.get('username1')));",
+              "pm.test('Профиль не содержит секретов', () => { const b = pm.response.json(); ['password', 'passwordHash', 'accessToken', 'tokenHash'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "02. Чтение без логина запрещено",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [],
+        "url": "{{baseUrl}}/user/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+              "pm.test('Отказ не раскрывает профиль', () => { const b = pm.response.json(); pm.expect(b.code).to.eql(401); ['id','email','username','firstName','lastName','phone'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "03. Изменение без логина запрещено",
+      "request": {
+        "method": "PUT",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Anonymous intrusion\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/user/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+              "pm.test('Отказ не раскрывает профиль', () => { const b = pm.response.json(); pm.expect(b.code).to.eql(401); ['id','email','username','firstName','lastName','phone'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "04. Поддельный заголовок пользователя запрещён",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "X-User-Id",
+            "value": "{{userId1}}"
+          }
+        ],
+        "url": "{{baseUrl}}/profile"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+              "pm.test('Отказ не раскрывает профиль', () => { const b = pm.response.json(); pm.expect(b.code).to.eql(401); ['id','email','username','firstName','lastName','phone'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "05. Неверный пароль",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username1}}\",\n  \"password\": \"Wrong!{{password1}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+              "pm.test('Отказ не раскрывает профиль', () => { const b = pm.response.json(); pm.expect(b.code).to.eql(401); ['id','email','username','firstName','lastName','phone'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "06. Вход пользователя 1",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username1}}\",\n  \"password\": \"{{password1}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const login = pm.response.json(); pm.collectionVariables.set('token1', login.accessToken);",
+              "pm.test('Токен принадлежит пользователю 1', () => { pm.expect(login.userId).to.eql(Number(pm.collectionVariables.get('userId1'))); pm.expect(login.tokenType).to.eql('Bearer'); pm.expect(login.accessToken).to.match(/^[A-Za-z0-9_-]{43}$/); pm.expect(Date.parse(login.expiresAt)).to.be.above(Date.now()); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "07. Изменение профиля пользователя 1",
+      "request": {
+        "method": "PUT",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token1}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"{{updatedFirstName}}\",\n  \"lastName\": \"{{updatedLastName}}\",\n  \"email\": \"{{updatedEmail}}\",\n  \"phone\": \"{{updatedPhone}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/user/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Профиль не содержит секретов', () => { const b = pm.response.json(); ['password', 'passwordHash', 'accessToken', 'tokenHash'].forEach(k => pm.expect(b).not.to.have.property(k)); });",
+              "pm.test('Обновлён свой профиль', () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('userId1'))));"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "08. Проверка сохранённых изменений",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token1}}"
+          }
+        ],
+        "url": "{{baseUrl}}/user/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Профиль не содержит секретов', () => { const b = pm.response.json(); ['password', 'passwordHash', 'accessToken', 'tokenHash'].forEach(k => pm.expect(b).not.to.have.property(k)); });",
+              "pm.test('Все изменения сохранены', () => { const b = pm.response.json(); for (const [field, key] of Object.entries({firstName:'updatedFirstName',lastName:'updatedLastName',email:'updatedEmail',phone:'updatedPhone',username:'username1'})) pm.expect(b[field], field).to.eql(pm.collectionVariables.get(key)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "09. Собственный профиль без ID",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token1}}"
+          }
+        ],
+        "url": "{{baseUrl}}/profile"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('ID определяется сессией', () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('userId1'))));",
+              "pm.test('Профиль не содержит секретов', () => { const b = pm.response.json(); ['password', 'passwordHash', 'accessToken', 'tokenHash'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "10. Выход пользователя 1",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token1}}"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/logout"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204', () => pm.response.to.have.status(204));",
+              "pm.test('Тело пустое', () => pm.expect(pm.response.text()).to.eql(''));"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "11. Старый токен больше не читает профиль",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token1}}"
+          }
+        ],
+        "url": "{{baseUrl}}/user/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+              "pm.test('Отказ не раскрывает профиль', () => { const b = pm.response.json(); pm.expect(b.code).to.eql(401); ['id','email','username','firstName','lastName','phone'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "12. Старый токен больше не изменяет профиль",
+      "request": {
+        "method": "PUT",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token1}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Revoked intrusion\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/user/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+              "pm.test('Отказ не раскрывает профиль', () => { const b = pm.response.json(); pm.expect(b.code).to.eql(401); ['id','email','username','firstName','lastName','phone'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "13. Регистрация пользователя 2",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username2}}\",\n  \"password\": \"{{password2}}\",\n  \"firstName\": \"{{firstName2}}\",\n  \"lastName\": \"{{lastName2}}\",\n  \"email\": \"{{email2}}\",\n  \"phone\": \"{{phone2}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/auth/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('userId2', pm.response.json().id);",
+              "pm.test('Создан другой пользователь', () => pm.expect(pm.response.json().id).not.to.eql(Number(pm.collectionVariables.get('userId1'))));",
+              "pm.test('Профиль не содержит секретов', () => { const b = pm.response.json(); ['password', 'passwordHash', 'accessToken', 'tokenHash'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "14. Вход пользователя 2",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username2}}\",\n  \"password\": \"{{password2}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const login = pm.response.json(); pm.collectionVariables.set('token2', login.accessToken);",
+              "pm.test('Токен принадлежит пользователю 2', () => { pm.expect(login.userId).to.eql(Number(pm.collectionVariables.get('userId2'))); pm.expect(login.tokenType).to.eql('Bearer'); pm.expect(login.accessToken).to.match(/^[A-Za-z0-9_-]{43}$/); pm.expect(Date.parse(login.expiresAt)).to.be.above(Date.now()); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "15. Пользователь 2 не читает профиль 1",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token2}}"
+          }
+        ],
+        "url": "{{baseUrl}}/user/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+              "pm.test('Отказ не раскрывает профиль', () => { const b = pm.response.json(); pm.expect(b.code).to.eql(403); ['id','email','username','firstName','lastName','phone'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "16. Пользователь 2 не изменяет профиль 1",
+      "request": {
+        "method": "PUT",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token2}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Cross-user intrusion\",\n  \"email\": \"{{email2}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/user/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+              "pm.test('Отказ не раскрывает профиль', () => { const b = pm.response.json(); pm.expect(b.code).to.eql(403); ['id','email','username','firstName','lastName','phone'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "17. Альтернативный URL защищён",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token2}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/users/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+              "pm.test('Отказ не раскрывает профиль', () => { const b = pm.response.json(); pm.expect(b.code).to.eql(403); ['id','email','username','firstName','lastName','phone'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "18. Альтернативный URL запрещает изменение",
+      "request": {
+        "method": "PUT",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token2}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Alias intrusion\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/v1/user/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+              "pm.test('Отказ не раскрывает профиль', () => { const b = pm.response.json(); pm.expect(b.code).to.eql(403); ['id','email','username','firstName','lastName','phone'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "19. Удаление чужого профиля запрещено",
+      "request": {
+        "method": "DELETE",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token2}}"
+          }
+        ],
+        "url": "{{baseUrl}}/user/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+              "pm.test('Отказ не раскрывает профиль', () => { const b = pm.response.json(); pm.expect(b.code).to.eql(403); ['id','email','username','firstName','lastName','phone'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "20. Список не раскрывает других пользователей",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token2}}"
+          }
+        ],
+        "url": "{{baseUrl}}/users"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('В списке только пользователь 2', () => { const b = pm.response.json(); pm.expect(b).to.have.lengthOf(1); pm.expect(b[0].id).to.eql(Number(pm.collectionVariables.get('userId2'))); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "21. Пользователь 2 читает собственный профиль",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token2}}"
+          }
+        ],
+        "url": "{{baseUrl}}/profile"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Данные пользователя 2 доступны ему', () => { pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('userId2'))); pm.expect(pm.response.json().email).to.eql(pm.collectionVariables.get('email2')); });",
+              "pm.test('Профиль не содержит секретов', () => { const b = pm.response.json(); ['password', 'passwordHash', 'accessToken', 'tokenHash'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "22. Повторный вход пользователя 1",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username1}}\",\n  \"password\": \"{{password1}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const login = pm.response.json(); pm.collectionVariables.set('freshToken1', login.accessToken);",
+              "pm.test('Токен принадлежит пользователю 1', () => { pm.expect(login.userId).to.eql(Number(pm.collectionVariables.get('userId1'))); pm.expect(login.tokenType).to.eql('Bearer'); pm.expect(login.accessToken).to.match(/^[A-Za-z0-9_-]{43}$/); pm.expect(Date.parse(login.expiresAt)).to.be.above(Date.now()); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "23. Чужие попытки не изменили профиль 1",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{freshToken1}}"
+          }
+        ],
+        "url": "{{baseUrl}}/profile"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Профиль 1 не повреждён', () => { const b = pm.response.json(); pm.expect(b.id).to.eql(Number(pm.collectionVariables.get('userId1'))); for (const [field, key] of Object.entries({firstName:'updatedFirstName',lastName:'updatedLastName',email:'updatedEmail',phone:'updatedPhone'})) pm.expect(b[field], field).to.eql(pm.collectionVariables.get(key)); });",
+              "pm.test('Профиль не содержит секретов', () => { const b = pm.response.json(); ['password', 'passwordHash', 'accessToken', 'tokenHash'].forEach(k => pm.expect(b).not.to.have.property(k)); });"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "24. Очистка профиля пользователя 1",
+      "request": {
+        "method": "DELETE",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{freshToken1}}"
+          }
+        ],
+        "url": "{{baseUrl}}/user/{{userId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204', () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "25. Очистка профиля пользователя 2",
+      "request": {
+        "method": "DELETE",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token2}}"
+          }
+        ],
+        "url": "{{baseUrl}}/user/{{userId2}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204', () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "response": []
+    }
+  ]
+}

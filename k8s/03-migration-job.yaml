@@ -27,7 +27,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: migrate
-          image: vafomenko/blt-users-api:6.0.0
+          image: vafomenko/blt-users-api:7.0.0
           imagePullPolicy: IfNotPresent
           command: ["dotnet", "Blt.Users.Api.dll", "--migrate"]
           envFrom:

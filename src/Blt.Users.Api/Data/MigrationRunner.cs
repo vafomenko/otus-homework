@@ -6,8 +6,6 @@ public sealed class MigrationRunner(
     DbConnectionFactory connectionFactory,
     ILogger<MigrationRunner> logger)
 {
-    private const string MigrationVersion = "001_users";
-
     public async Task RunAsync(CancellationToken cancellationToken = default)
     {
         logger.LogInformation("{event}: migration Job started", "migration_started");
@@ -65,40 +63,17 @@ public sealed class MigrationRunner(
             """,
             cancellationToken);
 
-        var alreadyApplied = await ExistsAsync(connection, transaction, cancellationToken);
-        if (!alreadyApplied)
+        var assembly = typeof(MigrationRunner).Assembly;
+        foreach (var resource in assembly.GetManifestResourceNames()
+                     .Where(name => name.StartsWith("Migrations.", StringComparison.Ordinal))
+                     .Order(StringComparer.Ordinal))
         {
-            await ExecuteAsync(
-                connection,
-                transaction,
-                """
-                CREATE TABLE IF NOT EXISTS users
-                (
-                    id         BIGSERIAL PRIMARY KEY,
-                    username   VARCHAR(256) NOT NULL,
-                    first_name VARCHAR(256) NOT NULL,
-                    last_name  VARCHAR(256) NOT NULL,
-                    email      VARCHAR(320) NOT NULL,
-                    phone      VARCHAR(64)
-                );
-                """,
-                cancellationToken);
-
-            await ExecuteAsync(
-                connection,
-                transaction,
-                "CREATE UNIQUE INDEX IF NOT EXISTS users_username_uq ON users (username);",
-                cancellationToken);
-            await ExecuteAsync(
-                connection,
-                transaction,
-                "CREATE UNIQUE INDEX IF NOT EXISTS users_email_uq ON users (email);",
-                cancellationToken);
-            await ExecuteAsync(
-                connection,
-                transaction,
-                "INSERT INTO schema_migrations(version) VALUES ('001_users');",
-                cancellationToken);
+            var version = resource["Migrations.".Length..^".sql".Length];
+            if (await ExistsAsync(connection, transaction, version, cancellationToken)) continue;
+            await using var stream = assembly.GetManifestResourceStream(resource)!;
+            using var reader = new StreamReader(stream);
+            await ExecuteAsync(connection, transaction, await reader.ReadToEndAsync(cancellationToken), cancellationToken);
+            logger.LogInformation("{event}: applied {version}", "migration_applied", version);
         }
 
         await transaction.CommitAsync(cancellationToken);
@@ -107,13 +82,14 @@ public sealed class MigrationRunner(
     private static async Task<bool> ExistsAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
+        string version,
         CancellationToken cancellationToken)
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText =
             "SELECT EXISTS (SELECT 1 FROM schema_migrations WHERE version = @version);";
-        command.Parameters.AddWithValue("version", MigrationVersion);
+        command.Parameters.AddWithValue("version", version);
         return (bool)(await command.ExecuteScalarAsync(cancellationToken) ?? false);
     }
 

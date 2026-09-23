@@ -1,0 +1,632 @@
+newman
+
+OTUS Homework 7 - Authentication and private profiles
+
+→ 01. Регистрация пользователя 1
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/otusapp/vyac
+  │ heslav/auth/register'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_1_90835f9114d449e185
+  │ 62b48b0a5b1553","password":"[REDACTED]","firstName":"R
+  │ oberta","lastName":"Roberts","email":"hw7_90835f9114d4
+  │ 49e18562b48b0a5b1553@example.com","phone":"+7919250181
+  │ 9"}'
+  └
+  POST http://127.0.0.1:8087/otusapp/vyacheslav/auth/register [201 Created, 422B, 127ms]
+  ┌
+  │ 'RESPONSE', 201, 'Created'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 0 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","Location":"/user/5","X
+  │ -Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":5,"username":"hw7_1_90835f9114
+  │ d449e18562b48b0a5b1553","firstName":"Roberta","lastNam
+  │ e":"Roberts","email":"hw7_90835f9114d449e18562b48b0a5b
+  │ 1553@example.com","phone":"+79192501819"}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 201
+  √  Создан пользователь 1
+  √  Профиль не содержит секретов
+
+→ 02. Чтение без логина запрещено
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/user/5'
+  │ 'REQUEST HEADERS', '{"Host":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/otusapp/vyacheslav/user/5 [401 Unauthorized, 298B, 5ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 0 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","WWW-Authenticate":"Bea
+  │ rer","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Authenticatio
+  │ n required."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 03. Изменение без логина запрещено
+  ┌
+  │ 'REQUEST', 'PUT', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/user/5'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"firstName":"Anonymous intrusion"}'
+  └
+  PUT http://127.0.0.1:8087/otusapp/vyacheslav/user/5 [401 Unauthorized, 298B, 4ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 0 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","WWW-Authenticate":"Bea
+  │ rer","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Authenticatio
+  │ n required."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 04. Поддельный заголовок пользователя запрещён
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/profile'
+  │ 'REQUEST HEADERS', '{"X-User-Id":"5","Host":"arch.home
+  │ work"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/otusapp/vyacheslav/profile [401 Unauthorized, 298B, 3ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 0 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","WWW-Authenticate":"Bea
+  │ rer","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Authenticatio
+  │ n required."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 05. Неверный пароль
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/otusapp/vyac
+  │ heslav/auth/login'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_1_90835f9114d449e185
+  │ 62b48b0a5b1553","password":"[REDACTED]"}'
+  └
+  POST http://127.0.0.1:8087/otusapp/vyacheslav/auth/login [401 Unauthorized, 277B, 184ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 0 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Invalid usern
+  │ ame or password."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 06. Вход пользователя 1
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/otusapp/vyac
+  │ heslav/auth/login'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_1_90835f9114d449e185
+  │ 62b48b0a5b1553","password":"[REDACTED]"}'
+  └
+  POST http://127.0.0.1:8087/otusapp/vyacheslav/auth/login [200 OK, 354B, 150ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 0 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"accessToken":"[REDACTED]","tokenTy
+  │ pe":"Bearer","expiresAt":"2026-09-22T22:41:50.9601194+
+  │ 00:00","userId":5}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Токен принадлежит пользователю 1
+
+→ 07. Изменение профиля пользователя 1
+  ┌
+  │ 'REQUEST', 'PUT', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/user/5'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Authorization":"[REDACTED]","Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"firstName":"Updated_Kolby","lastNam
+  │ e":"Updated_Pfeffer","email":"61c050d5-d865-4a29-84b8-
+  │ 67aedade461f@example.com","phone":"+79993015299"}'
+  └
+  PUT http://127.0.0.1:8087/otusapp/vyacheslav/user/5 [200 OK, 412B, 15ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 1 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":5,"username":"hw7_1_90835f9114
+  │ d449e18562b48b0a5b1553","firstName":"Updated_Kolby","l
+  │ astName":"Updated_Pfeffer","email":"61c050d5-d865-4a29
+  │ -84b8-67aedade461f@example.com","phone":"+79993015299"
+  │ }'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Профиль не содержит секретов
+  √  Обновлён свой профиль
+
+→ 08. Проверка сохранённых изменений
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/user/5'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/otusapp/vyacheslav/user/5 [200 OK, 412B, 8ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 1 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":5,"username":"hw7_1_90835f9114
+  │ d449e18562b48b0a5b1553","firstName":"Updated_Kolby","l
+  │ astName":"Updated_Pfeffer","email":"61c050d5-d865-4a29
+  │ -84b8-67aedade461f@example.com","phone":"+79993015299"
+  │ }'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Профиль не содержит секретов
+  √  Все изменения сохранены
+
+→ 09. Собственный профиль без ID
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/profile'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/otusapp/vyacheslav/profile [200 OK, 412B, 14ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 1 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":5,"username":"hw7_1_90835f9114
+  │ d449e18562b48b0a5b1553","firstName":"Updated_Kolby","l
+  │ astName":"Updated_Pfeffer","email":"61c050d5-d865-4a29
+  │ -84b8-67aedade461f@example.com","phone":"+79993015299"
+  │ }'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  ID определяется сессией
+  √  Профиль не содержит секретов
+
+→ 10. Выход пользователя 1
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/otusapp/vyac
+  │ heslav/auth/logout'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  POST http://127.0.0.1:8087/otusapp/vyacheslav/auth/logout [204 No Content, 146B, 43ms]
+  ┌
+  │ 'RESPONSE', 204, 'No Content'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 1 GMT","Connection":"keep-alive","Cache-Control":"no-s
+  │ tore","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', ''
+  └
+  √  Ответ не кешируется
+  √  HTTP 204
+  √  Тело пустое
+
+→ 11. Старый токен больше не читает профиль
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/user/5'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/otusapp/vyacheslav/user/5 [401 Unauthorized, 298B, 8ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 1 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","WWW-Authenticate":"Bea
+  │ rer","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Authenticatio
+  │ n required."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 12. Старый токен больше не изменяет профиль
+  ┌
+  │ 'REQUEST', 'PUT', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/user/5'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Authorization":"[REDACTED]","Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"firstName":"Revoked intrusion"}'
+  └
+  PUT http://127.0.0.1:8087/otusapp/vyacheslav/user/5 [401 Unauthorized, 298B, 14ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 1 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","WWW-Authenticate":"Bea
+  │ rer","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"code":401,"message":"Authenticatio
+  │ n required."}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 401
+  √  Отказ не раскрывает профиль
+
+→ 13. Регистрация пользователя 2
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/otusapp/vyac
+  │ heslav/auth/register'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_2_fc8010e9d8aa420198
+  │ 3f9f77c9a7c682","password":"[REDACTED]","firstName":"P
+  │ erry","lastName":"Legros","email":"hw7_fc8010e9d8aa420
+  │ 1983f9f77c9a7c682@example.com","phone":"+79328141398"}
+  │ '
+  └
+  POST http://127.0.0.1:8087/otusapp/vyacheslav/auth/register [201 Created, 419B, 217ms]
+  ┌
+  │ 'RESPONSE', 201, 'Created'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 1 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","Location":"/user/6","X
+  │ -Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":6,"username":"hw7_2_fc8010e9d8
+  │ aa4201983f9f77c9a7c682","firstName":"Perry","lastName"
+  │ :"Legros","email":"hw7_fc8010e9d8aa4201983f9f77c9a7c68
+  │ 2@example.com","phone":"+79328141398"}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 201
+  √  Создан другой пользователь
+  √  Профиль не содержит секретов
+
+→ 14. Вход пользователя 2
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/otusapp/vyac
+  │ heslav/auth/login'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_2_fc8010e9d8aa420198
+  │ 3f9f77c9a7c682","password":"[REDACTED]"}'
+  └
+  POST http://127.0.0.1:8087/otusapp/vyacheslav/auth/login [200 OK, 354B, 141ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 2 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"accessToken":"[REDACTED]","tokenTy
+  │ pe":"Bearer","expiresAt":"2026-09-22T22:41:52.1842312+
+  │ 00:00","userId":6}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Токен принадлежит пользователю 2
+
+→ 15. Пользователь 2 не читает профиль 1
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/user/5'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/otusapp/vyacheslav/user/5 [403 Forbidden, 291B, 3ms]
+  ┌
+  │ 'RESPONSE', 403, 'Forbidden'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 2 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', `{"code":403,"message":"Access to ano
+  │ ther user's profile is forbidden."}`
+  └
+  √  Ответ не кешируется
+  √  HTTP 403
+  √  Отказ не раскрывает профиль
+
+→ 16. Пользователь 2 не изменяет профиль 1
+  ┌
+  │ 'REQUEST', 'PUT', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/user/5'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Authorization":"[REDACTED]","Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"firstName":"Cross-user intrusion","
+  │ email":"hw7_fc8010e9d8aa4201983f9f77c9a7c682@example.c
+  │ om"}'
+  └
+  PUT http://127.0.0.1:8087/otusapp/vyacheslav/user/5 [403 Forbidden, 291B, 4ms]
+  ┌
+  │ 'RESPONSE', 403, 'Forbidden'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 2 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', `{"code":403,"message":"Access to ano
+  │ ther user's profile is forbidden."}`
+  └
+  √  Ответ не кешируется
+  √  HTTP 403
+  √  Отказ не раскрывает профиль
+
+→ 17. Альтернативный URL защищён
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/api/v1/users/5'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/otusapp/vyacheslav/api/v1/users/5 [403 Forbidden, 291B, 4ms]
+  ┌
+  │ 'RESPONSE', 403, 'Forbidden'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 2 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', `{"code":403,"message":"Access to ano
+  │ ther user's profile is forbidden."}`
+  └
+  √  Ответ не кешируется
+  √  HTTP 403
+  √  Отказ не раскрывает профиль
+
+→ 18. Альтернативный URL запрещает изменение
+  ┌
+  │ 'REQUEST', 'PUT', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/v1/user/5'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Authorization":"[REDACTED]","Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"firstName":"Alias intrusion"}'
+  └
+  PUT http://127.0.0.1:8087/otusapp/vyacheslav/v1/user/5 [403 Forbidden, 291B, 3ms]
+  ┌
+  │ 'RESPONSE', 403, 'Forbidden'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 2 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', `{"code":403,"message":"Access to ano
+  │ ther user's profile is forbidden."}`
+  └
+  √  Ответ не кешируется
+  √  HTTP 403
+  √  Отказ не раскрывает профиль
+
+→ 19. Удаление чужого профиля запрещено
+  ┌
+  │ 'REQUEST', 'DELETE', 'http://127.0.0.1:8087/otusapp/vy
+  │ acheslav/user/5'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  DELETE http://127.0.0.1:8087/otusapp/vyacheslav/user/5 [403 Forbidden, 291B, 4ms]
+  ┌
+  │ 'RESPONSE', 403, 'Forbidden'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 2 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', `{"code":403,"message":"Access to ano
+  │ ther user's profile is forbidden."}`
+  └
+  √  Ответ не кешируется
+  √  HTTP 403
+  √  Отказ не раскрывает профиль
+
+→ 20. Список не раскрывает других пользователей
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/users'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/otusapp/vyacheslav/users [200 OK, 397B, 5ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 2 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '[{"id":6,"username":"hw7_2_fc8010e9d
+  │ 8aa4201983f9f77c9a7c682","firstName":"Perry","lastName
+  │ ":"Legros","email":"hw7_fc8010e9d8aa4201983f9f77c9a7c6
+  │ 82@example.com","phone":"+79328141398"}]'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  В списке только пользователь 2
+
+→ 21. Пользователь 2 читает собственный профиль
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/profile'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/otusapp/vyacheslav/profile [200 OK, 395B, 5ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 2 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":6,"username":"hw7_2_fc8010e9d8
+  │ aa4201983f9f77c9a7c682","firstName":"Perry","lastName"
+  │ :"Legros","email":"hw7_fc8010e9d8aa4201983f9f77c9a7c68
+  │ 2@example.com","phone":"+79328141398"}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Данные пользователя 2 доступны ему
+  √  Профиль не содержит секретов
+
+→ 22. Повторный вход пользователя 1
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8087/otusapp/vyac
+  │ heslav/auth/login'
+  │ 'REQUEST HEADERS', '{"Content-Type":"application/json"
+  │ ,"Host":"arch.homework"}'
+  │ 'REQUEST BODY', '{"username":"hw7_1_90835f9114d449e185
+  │ 62b48b0a5b1553","password":"[REDACTED]"}'
+  └
+  POST http://127.0.0.1:8087/otusapp/vyacheslav/auth/login [200 OK, 354B, 99ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 2 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"accessToken":"[REDACTED]","tokenTy
+  │ pe":"Bearer","expiresAt":"2026-09-22T22:41:52.9927992+
+  │ 00:00","userId":5}'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Токен принадлежит пользователю 1
+
+→ 23. Чужие попытки не изменили профиль 1
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8087/otusapp/vyach
+  │ eslav/profile'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  GET http://127.0.0.1:8087/otusapp/vyacheslav/profile [200 OK, 412B, 5ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 3 GMT","Content-Type":"application/json; charset=utf-8
+  │ ","Transfer-Encoding":"chunked","Connection":"keep-ali
+  │ ve","Cache-Control":"no-store","X-Content-Type-Options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":5,"username":"hw7_1_90835f9114
+  │ d449e18562b48b0a5b1553","firstName":"Updated_Kolby","l
+  │ astName":"Updated_Pfeffer","email":"61c050d5-d865-4a29
+  │ -84b8-67aedade461f@example.com","phone":"+79993015299"
+  │ }'
+  └
+  √  Ответ не кешируется
+  √  HTTP 200
+  √  Профиль 1 не повреждён
+  √  Профиль не содержит секретов
+
+→ 24. Очистка профиля пользователя 1
+  ┌
+  │ 'REQUEST', 'DELETE', 'http://127.0.0.1:8087/otusapp/vy
+  │ acheslav/user/5'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  DELETE http://127.0.0.1:8087/otusapp/vyacheslav/user/5 [204 No Content, 146B, 7ms]
+  ┌
+  │ 'RESPONSE', 204, 'No Content'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 3 GMT","Connection":"keep-alive","Cache-Control":"no-s
+  │ tore","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', ''
+  └
+  √  Ответ не кешируется
+  √  HTTP 204
+
+→ 25. Очистка профиля пользователя 2
+  ┌
+  │ 'REQUEST', 'DELETE', 'http://127.0.0.1:8087/otusapp/vy
+  │ acheslav/user/6'
+  │ 'REQUEST HEADERS', '{"Authorization":"[REDACTED]","Hos
+  │ t":"arch.homework"}'
+  │ 'REQUEST BODY', ''
+  └
+  DELETE http://127.0.0.1:8087/otusapp/vyacheslav/user/6 [204 No Content, 146B, 6ms]
+  ┌
+  │ 'RESPONSE', 204, 'No Content'
+  │ 'RESPONSE HEADERS', '{"Date":"Tue, 22 Sep 2026 21:41:5
+  │ 3 GMT","Connection":"keep-alive","Cache-Control":"no-s
+  │ tore","X-Content-Type-Options":"nosniff"}'
+  │ 'RESPONSE BODY', ''
+  └
+  √  Ответ не кешируется
+  √  HTTP 204
+
+┌─────────────────────────┬───────────────────┬──────────────────┐
+│                         │          executed │           failed │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              iterations │                 1 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│                requests │                25 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│            test-scripts │                50 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│      prerequest-scripts │                25 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              assertions │                80 │                0 │
+├─────────────────────────┴───────────────────┴──────────────────┤
+│ total run duration: 3.3s                                       │
+├────────────────────────────────────────────────────────────────┤
+│ total data received: 2.61kB (approx)                           │
+├────────────────────────────────────────────────────────────────┤
+│ average response time: 43ms [min: 3ms, max: 217ms, s.d.: 65ms] │
+└────────────────────────────────────────────────────────────────┘

@@ -17,3 +17,4 @@ data:
   Database__Name: {{ .Values.database.name | quote }}
   Database__SslMode: {{ .Values.database.sslMode | quote }}
   Observability__EnableFaultInjection: {{ .Values.observability.enableFaultInjection | quote }}
+  Session__LifetimeMinutes: {{ .Values.session.lifetimeMinutes | quote }}
