@@ -1,0 +1,5 @@
+OpenAPI 3.0: openapi.yaml, http-only.openapi.yaml, collaboration.openapi.yaml validated successfully.
+AsyncAPI 2.6: notifications.asyncapi.yaml, collaboration.asyncapi.yaml validated against the official 2.6.0 meta-schema.
+Postman: all 29 requests use {{baseUrl}}; initial/default URL is http://arch.homework.
+Kafka 85ddb30e-224d-4777-b307-152285bbce0a: JSON Schema valid; key = orderId; status = paid.
+Kafka df922bc0-9640-4b09-a782-24a2c2ef818d: JSON Schema valid; key = orderId; status = rejected.

@@ -1,0 +1,24 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /billing
+            pathType: Prefix
+            backend: {service: {name: {{ .Release.Name }}-billing, port: {number: 8000}}}
+          - path: /orders
+            pathType: Prefix
+            backend: {service: {name: {{ .Release.Name }}-orders, port: {number: 8000}}}
+          - path: /notifications
+            pathType: Prefix
+            backend: {service: {name: {{ .Release.Name }}-notifications, port: {number: 8000}}}
+          - path: /
+            pathType: Prefix
+            backend: {service: {name: {{ .Release.Name }}-users, port: {number: 8000}}}
+{{- end }}

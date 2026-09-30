@@ -1,0 +1,8 @@
+Release "blt-streaming" has been upgraded. Happy Helming!
+NAME: blt-streaming
+LAST DEPLOYED: Wed Sep 30 20:36:46 2026
+NAMESPACE: blt
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+TEST SUITE: None

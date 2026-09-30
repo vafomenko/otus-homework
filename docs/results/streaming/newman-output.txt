@@ -1,0 +1,664 @@
+newman
+
+OTUS Homework 8 — Stream Processing / Apache Kafka
+
+→ 01 Register user
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/auth/registe
+  │ r'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"username":"hw8_26095cdb980c4eafafe5
+  │ 7e8e861bf70e","password":"[REDACTED]","firstName":"Ива
+  │ н","lastName":"Тестовый","email":"hw8_26095cdb980c4eaf
+  │ afe57e8e861bf70e@example.com"}'
+  └
+  POST http://127.0.0.1:8098/auth/register [201 Created, 407B, 394ms]
+  ┌
+  │ 'RESPONSE', 201, 'Created'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 2 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store","location":"/user/1","x
+  │ -content-type-options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":1,"username":"hw8_26095cdb980c
+  │ 4eafafe57e8e861bf70e","firstName":"Иван","lastName":"Т
+  │ естовый","email":"hw8_26095cdb980c4eafafe57e8e861bf70e
+  │ @example.com"}'
+  └
+  √  HTTP 201
+
+→ 02 Login
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/auth/login'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"username":"hw8_26095cdb980c4eafafe5
+  │ 7e8e861bf70e","password":"[REDACTED]"}'
+  └
+  POST http://127.0.0.1:8098/auth/login [200 OK, 353B, 122ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 3 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store","x-content-type-options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"accessToken":"[REDACTED]","tokenTy
+  │ pe":"[REDACTED]","expiresAt":"2026-09-30T18:36:33.2334
+  │ 52+00:00","userId":1}'
+  └
+  √  HTTP 200
+
+→ 03 Billing account created automatically
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/billing/accou
+  │ nt'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/billing/account [200 OK, 221B, 58ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 3 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"userId":1,"balance":0,"currency":"
+  │ RUB"}'
+  └
+  √  HTTP 200
+  √  Balance = 0 kopecks
+
+→ 04 Deposit 10000 kopecks
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/billing/depo
+  │ sits'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"operationId":"e3e4355f-8176-408c-99
+  │ e3-d1ed4f414ed6","amount":10000}'
+  └
+  POST http://127.0.0.1:8098/billing/deposits [200 OK, 328B, 29ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 3 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"operationId":"e3e4355f-8176-408c-9
+  │ 9e3-d1ed4f414ed6","userId":1,"amount":10000,"kind":"de
+  │ posit","status":"succeeded","balance":10000,"reason":n
+  │ ull}'
+  └
+  √  HTTP 200
+  √  Operation result
+
+→ 05 Place affordable order
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/orders'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"price":3000}'
+  └
+  POST http://127.0.0.1:8098/orders [201 Created, 388B, 123ms]
+  ┌
+  │ 'RESPONSE', 201, 'Created'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 4 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store","location":"/orders/c9c
+  │ e609e-5750-43b4-939c-a0961392d3d4"}'
+  │ 'RESPONSE BODY', '{"id":"c9ce609e-5750-43b4-939c-a0961
+  │ 392d3d4","userId":1,"price":3000,"status":"paid","reas
+  │ on":null,"createdAt":"2026-09-30T17:36:34.3723722+00:0
+  │ 0"}'
+  └
+  √  HTTP 201
+  √  Order paid
+
+→ 06 Money debited
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/billing/accou
+  │ nt'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/billing/account [200 OK, 224B, 10ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 4 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"userId":1,"balance":7000,"currency
+  │ ":"RUB"}'
+  └
+  √  HTTP 200
+  √  Balance = 7000 kopecks
+
+→ 07 Happy letter (poll Kafka consumer)
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/notifications
+  │ ?orderId=c9ce609e-5750-43b4-939c-a0961392d3d4'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/notifications?orderId=c9ce609e-5750-43b4-939c-a0961392d3d4 [200 OK, 629B, 582ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 5 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '[{"id":"026f2925-3f95-4e0f-bd7c-3108
+  │ 35cdfab1","eventId":"85ddb30e-224d-4777-b307-152285bbc
+  │ e0a","orderId":"c9ce609e-5750-43b4-939c-a0961392d3d4",
+  │ "userId":1,"email":"hw8_26095cdb980c4eafafe57e8e861bf7
+  │ 0e@example.com","subject":"Письмо счастья","body":"Зак
+  │ аз c9ce609e-5750-43b4-939c-a0961392d3d4 оформлен. Опла
+  │ та 3000 коп. прошла успешно.","outcome":"paid","create
+  │ dAt":"2026-09-30T17:36:34.517893+00:00"}]'
+  └
+  √  HTTP 200
+  √  Exactly one paid letter saved
+
+→ 08 Place unaffordable order
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/orders'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"price":8000}'
+  └
+  POST http://127.0.0.1:8098/orders [201 Created, 408B, 29ms]
+  ┌
+  │ 'RESPONSE', 201, 'Created'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 5 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store","location":"/orders/ecc
+  │ ec61a-c8d1-4700-bdf4-ffddb78d1994"}'
+  │ 'RESPONSE BODY', '{"id":"eccec61a-c8d1-4700-bdf4-ffddb
+  │ 78d1994","userId":1,"price":8000,"status":"rejected","
+  │ reason":"insufficient_funds","createdAt":"2026-09-30T1
+  │ 7:36:35.9650476+00:00"}'
+  └
+  √  HTTP 201
+  √  Order rejected
+
+→ 09 Balance unchanged
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/billing/accou
+  │ nt'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/billing/account [200 OK, 224B, 8ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 6 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"userId":1,"balance":7000,"currency
+  │ ":"RUB"}'
+  └
+  √  HTTP 200
+  √  Balance = 7000 kopecks
+
+→ 10 Sad letter (poll Kafka consumer)
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/notifications
+  │ ?orderId=eccec61a-c8d1-4700-bdf4-ffddb78d1994'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/notifications?orderId=eccec61a-c8d1-4700-bdf4-ffddb78d1994 [200 OK, 652B, 14ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 6 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '[{"id":"80330ca8-6993-4ad5-9178-2d07
+  │ 07b93f78","eventId":"df922bc0-9640-4b09-a782-24a2c2ef8
+  │ 18d","orderId":"eccec61a-c8d1-4700-bdf4-ffddb78d1994",
+  │ "userId":1,"email":"hw8_26095cdb980c4eafafe57e8e861bf7
+  │ 0e@example.com","subject":"Письмо горя","body":"Заказ 
+  │ eccec61a-c8d1-4700-bdf4-ffddb78d1994 не оформлен: недо
+  │ статочно средств. Деньги не списаны.","outcome":"rejec
+  │ ted","createdAt":"2026-09-30T17:36:36.109718+00:00"}]'
+  └
+  √  HTTP 200
+  √  Exactly one rejected letter saved
+
+→ 11 Both outcomes are persisted
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/notifications
+  │ '
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/notifications [200 OK, 1.1kB, 13ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 6 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '[{"id":"026f2925-3f95-4e0f-bd7c-3108
+  │ 35cdfab1","eventId":"85ddb30e-224d-4777-b307-152285bbc
+  │ e0a","orderId":"c9ce609e-5750-43b4-939c-a0961392d3d4",
+  │ "userId":1,"email":"hw8_26095cdb980c4eafafe57e8e861bf7
+  │ 0e@example.com","subject":"Письмо счастья","body":"Зак
+  │ аз c9ce609e-5750-43b4-939c-a0961392d3d4 оформлен. Опла
+  │ та 3000 коп. прошла успешно.","outcome":"paid","create
+  │ dAt":"2026-09-30T17:36:34.517893+00:00"},{"id":"80330c
+  │ a8-6993-4ad5-9178-2d0707b93f78","eventId":"df922bc0-96
+  │ 40-4b09-a782-24a2c2ef818d","orderId":"eccec61a-c8d1-47
+  │ 00-bdf4-ffddb78d1994","userId":1,"email":"hw8_26095cdb
+  │ 980c4eafafe57e8e861bf70e@example.com","subject":"Письм
+  │ о горя","body":"Заказ eccec61a-c8d1-4700-bdf4-ffddb78d
+  │ 1994 не оформлен: недостаточно средств. Деньги не спис
+  │ аны.","outcome":"rejected","createdAt":"2026-09-30T17:
+  │ 36:36.109718+00:00"}]'
+  └
+  √  HTTP 200
+  √  Two letters, one for each order
+
+→ 12 Read paid order
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/orders/c9ce60
+  │ 9e-5750-43b4-939c-a0961392d3d4'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/orders/c9ce609e-5750-43b4-939c-a0961392d3d4 [200 OK, 326B, 18ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 7 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"id":"c9ce609e-5750-43b4-939c-a0961
+  │ 392d3d4","userId":1,"price":3000,"status":"paid","reas
+  │ on":null,"createdAt":"2026-09-30T17:36:34.372372+00:00
+  │ "}'
+  └
+  √  HTTP 200
+  √  Persisted paid order
+
+→ 13 Negative deposit rejected
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/billing/depo
+  │ sits'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"operationId":"5b60e7f9-7555-4c36-a2
+  │ 19-c84d776c6e3d","amount":-1}'
+  └
+  POST http://127.0.0.1:8098/billing/deposits [400 Bad Request, 267B, 10ms]
+  ┌
+  │ 'RESPONSE', 400, 'Bad Request'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 7 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"error":"Positive amount in kopecks
+  │  and nonempty operation ID are required."}'
+  └
+  √  HTTP 400
+
+→ 14 Zero price rejected
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/orders'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"price":0}'
+  └
+  POST http://127.0.0.1:8098/orders [400 Bad Request, 263B, 8ms]
+  ┌
+  │ 'RESPONSE', 400, 'Bad Request'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 7 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"error":"Price must be positive int
+  │ eger kopecks, at most 1000000000000."}'
+  └
+  √  HTTP 400
+
+→ 15 Fractional price rejected
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/orders'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"price":0.5}'
+  └
+  POST http://127.0.0.1:8098/orders [400 Bad Request, 133B, 12ms]
+  ┌
+  │ 'RESPONSE', 400, 'Bad Request'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 8 GMT","content-length":"0","connection":"keep-alive",
+  │ "cache-control":"no-store"}'
+  │ 'RESPONSE BODY', ''
+  └
+  √  HTTP 400
+
+→ 16 Withdraw money directly
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/billing/with
+  │ drawals'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"operationId":"ca08f3fc-e9ed-432b-a8
+  │ 72-57db9d1e19ab","amount":500}'
+  └
+  POST http://127.0.0.1:8098/billing/withdrawals [200 OK, 328B, 14ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 8 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"operationId":"ca08f3fc-e9ed-432b-a
+  │ 872-57db9d1e19ab","userId":1,"amount":500,"kind":"with
+  │ drawal","status":"succeeded","balance":6500,"reason":n
+  │ ull}'
+  └
+  √  HTTP 200
+  √  Operation result
+
+→ 17 Retry withdrawal is idempotent
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/billing/with
+  │ drawals'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"operationId":"ca08f3fc-e9ed-432b-a8
+  │ 72-57db9d1e19ab","amount":500}'
+  └
+  POST http://127.0.0.1:8098/billing/withdrawals [200 OK, 328B, 19ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 8 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"operationId":"ca08f3fc-e9ed-432b-a
+  │ 872-57db9d1e19ab","userId":1,"amount":500,"kind":"with
+  │ drawal","status":"succeeded","balance":6500,"reason":n
+  │ ull}'
+  └
+  √  HTTP 200
+  √  Operation result
+
+→ 18 Changed retry rejected
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/billing/with
+  │ drawals'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"operationId":"ca08f3fc-e9ed-432b-a8
+  │ 72-57db9d1e19ab","amount":501}'
+  └
+  POST http://127.0.0.1:8098/billing/withdrawals [409 Conflict, 254B, 9ms]
+  ┌
+  │ 'RESPONSE', 409, 'Conflict'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 9 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"error":"Operation ID was already u
+  │ sed with different parameters."}'
+  └
+  √  HTTP 409
+
+→ 19 Confirm final balance
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/billing/accou
+  │ nt'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/billing/account [200 OK, 224B, 7ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 9 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"userId":1,"balance":6500,"currency
+  │ ":"RUB"}'
+  └
+  √  HTTP 200
+  √  Balance = 6500 kopecks
+
+→ 20 Notification API saves a message
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/notification
+  │ s'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"subject":"Проверка API","body":"Тес
+  │ товое сообщение на собственный email."}'
+  └
+  POST http://127.0.0.1:8098/notifications [201 Created, 566B, 22ms]
+  ┌
+  │ 'RESPONSE', 201, 'Created'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:3
+  │ 9 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store","location":"/notificati
+  │ ons"}'
+  │ 'RESPONSE BODY', '{"id":"d0886505-fdff-43c9-acb9-f0b57
+  │ 537658c","eventId":"90ac1d7c-ee6a-42ce-976b-2bdf06812b
+  │ b8","orderId":null,"userId":1,"email":"hw8_26095cdb980
+  │ c4eafafe57e8e861bf70e@example.com","subject":"Проверка
+  │  API","body":"Тестовое сообщение на собственный email.
+  │ ","outcome":null,"createdAt":"2026-09-30T17:36:39.7818
+  │ 809+00:00"}'
+  └
+  √  HTTP 201
+  √  Recipient is authenticated user
+
+→ 21 Direct message persisted
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/notifications
+  │ '
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/notifications [200 OK, 1.45kB, 7ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:4
+  │ 0 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '[{"id":"026f2925-3f95-4e0f-bd7c-3108
+  │ 35cdfab1","eventId":"85ddb30e-224d-4777-b307-152285bbc
+  │ e0a","orderId":"c9ce609e-5750-43b4-939c-a0961392d3d4",
+  │ "userId":1,"email":"hw8_26095cdb980c4eafafe57e8e861bf7
+  │ 0e@example.com","subject":"Письмо счастья","body":"Зак
+  │ аз c9ce609e-5750-43b4-939c-a0961392d3d4 оформлен. Опла
+  │ та 3000 коп. прошла успешно.","outcome":"paid","create
+  │ dAt":"2026-09-30T17:36:34.517893+00:00"},{"id":"80330c
+  │ a8-6993-4ad5-9178-2d0707b93f78","eventId":"df922bc0-96
+  │ 40-4b09-a782-24a2c2ef818d","orderId":"eccec61a-c8d1-47
+  │ 00-bdf4-ffddb78d1994","userId":1,"email":"hw8_26095cdb
+  │ 980c4eafafe57e8e861bf70e@example.com","subject":"Письм
+  │ о горя","body":"Заказ eccec61a-c8d1-4700-bdf4-ffddb78d
+  │ 1994 не оформлен: недостаточно средств. Деньги не спис
+  │ аны.","outcome":"rejected","createdAt":"2026-09-30T17:
+  │ 36:36.109718+00:00"},{"id":"d0886505-fdff-43c9-acb9-f0
+  │ b57537658c","eventId":"90ac1d7c-ee6a-42ce-976b-2bdf068
+  │ 12bb8","orderId":null,"userId":1,"email":"hw8_26095cdb
+  │ 980c4eafafe57e8e861bf70e@example.com","subject":"Прове
+  │ рка API","body":"Тестовое сообщение на собственный ema
+  │ il.","outcome":null,"createdAt":"2026-09-30T17:36:39.7
+  │ 8188+00:00"}]'
+  └
+  √  HTTP 200
+  √  Three saved messages
+
+→ 22 Anonymous balance denied
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/billing/accou
+  │ nt'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/billing/account [401 Unauthorized, 134B, 5ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:4
+  │ 0 GMT","content-length":"0","connection":"keep-alive",
+  │ "cache-control":"no-store"}'
+  │ 'RESPONSE BODY', ''
+  └
+  √  HTTP 401
+
+→ 23 Anonymous order denied
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/orders'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"price":100}'
+  └
+  POST http://127.0.0.1:8098/orders [401 Unauthorized, 134B, 6ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:4
+  │ 0 GMT","content-length":"0","connection":"keep-alive",
+  │ "cache-control":"no-store"}'
+  │ 'RESPONSE BODY', ''
+  └
+  √  HTTP 401
+
+→ 24 Anonymous notifications denied
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/notifications
+  │ '
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/notifications [401 Unauthorized, 134B, 5ms]
+  ┌
+  │ 'RESPONSE', 401, 'Unauthorized'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:4
+  │ 1 GMT","content-length":"0","connection":"keep-alive",
+  │ "cache-control":"no-store"}'
+  │ 'RESPONSE BODY', ''
+  └
+  √  HTTP 401
+
+→ 25 Register another user
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/auth/registe
+  │ r'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"username":"hw8_b_26095cdb980c4eafaf
+  │ e57e8e861bf70e","password":"[REDACTED]","firstName":"И
+  │ ван","lastName":"Тестовый","email":"hw8_b_26095cdb980c
+  │ 4eafafe57e8e861bf70e@example.com"}'
+  └
+  POST http://127.0.0.1:8098/auth/register [201 Created, 411B, 116ms]
+  ┌
+  │ 'RESPONSE', 201, 'Created'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:4
+  │ 1 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store","location":"/user/2","x
+  │ -content-type-options":"nosniff"}'
+  │ 'RESPONSE BODY', '{"id":2,"username":"hw8_b_26095cdb98
+  │ 0c4eafafe57e8e861bf70e","firstName":"Иван","lastName":
+  │ "Тестовый","email":"hw8_b_26095cdb980c4eafafe57e8e861b
+  │ f70e@example.com"}'
+  └
+  √  HTTP 201
+
+→ 26 Login as another user
+  ┌
+  │ 'REQUEST', 'POST', 'http://127.0.0.1:8098/auth/login'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework","content-t
+  │ ype":"application/json"}'
+  │ 'REQUEST BODY', '{"username":"hw8_b_26095cdb980c4eafaf
+  │ e57e8e861bf70e","password":"[REDACTED]"}'
+  └
+  POST http://127.0.0.1:8098/auth/login [200 OK, 354B, 104ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:4
+  │ 1 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store","x-content-type-options
+  │ ":"nosniff"}'
+  │ 'RESPONSE BODY', '{"accessToken":"[REDACTED]","tokenTy
+  │ pe":"[REDACTED]","expiresAt":"2026-09-30T18:36:41.9106
+  │ 004+00:00","userId":2}'
+  └
+  √  HTTP 200
+
+→ 27 Another user cannot read the order
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/orders/c9ce60
+  │ 9e-5750-43b4-939c-a0961392d3d4'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/orders/c9ce609e-5750-43b4-939c-a0961392d3d4 [404 Not Found, 131B, 8ms]
+  ┌
+  │ 'RESPONSE', 404, 'Not Found'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:4
+  │ 2 GMT","content-length":"0","connection":"keep-alive",
+  │ "cache-control":"no-store"}'
+  │ 'RESPONSE BODY', ''
+  └
+  √  HTTP 404
+
+→ 28 Another user has no letters
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/notifications
+  │ ?orderId=c9ce609e-5750-43b4-939c-a0961392d3d4'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/notifications?orderId=c9ce609e-5750-43b4-939c-a0961392d3d4 [200 OK, 182B, 7ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:4
+  │ 2 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '[]'
+  └
+  √  HTTP 200
+  √  No foreign messages
+
+→ 29 Another account is empty
+  ┌
+  │ 'REQUEST', 'GET', 'http://127.0.0.1:8098/billing/accou
+  │ nt'
+  │ 'REQUEST HEADERS', '{"host":"arch.homework"}'
+  └
+  GET http://127.0.0.1:8098/billing/account [200 OK, 221B, 7ms]
+  ┌
+  │ 'RESPONSE', 200, 'OK'
+  │ 'RESPONSE HEADERS', '{"date":"Wed, 30 Sep 2026 17:36:4
+  │ 2 GMT","content-type":"application/json; charset=utf-8
+  │ ","transfer-encoding":"chunked","connection":"keep-ali
+  │ ve","cache-control":"no-store"}'
+  │ 'RESPONSE BODY', '{"userId":2,"balance":0,"currency":"
+  │ RUB"}'
+  └
+  √  HTTP 200
+  √  Separate balance
+
+┌─────────────────────────┬───────────────────┬───────────────────┐
+│                         │          executed │            failed │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│              iterations │                 1 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│                requests │                29 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│            test-scripts │                58 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│      prerequest-scripts │                29 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│              assertions │                46 │                 0 │
+├─────────────────────────┴───────────────────┴───────────────────┤
+│ total run duration: 10.7s                                       │
+├─────────────────────────────────────────────────────────────────┤
+│ total data received: 5.44kB (approx)                            │
+├─────────────────────────────────────────────────────────────────┤
+│ average response time: 60ms [min: 5ms, max: 582ms, s.d.: 124ms] │
+└─────────────────────────────────────────────────────────────────┘

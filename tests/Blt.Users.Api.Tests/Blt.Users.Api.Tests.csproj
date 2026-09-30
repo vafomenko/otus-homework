@@ -17,5 +17,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Blt.Users.Api/Blt.Users.Api.csproj" />
+    <ProjectReference Include="../../src/Blt.Billing.Api/Blt.Billing.Api.csproj" />
+    <ProjectReference Include="../../src/Blt.Orders.Api/Blt.Orders.Api.csproj" />
+    <ProjectReference Include="../../src/Blt.Notifications.Api/Blt.Notifications.Api.csproj" />
   </ItemGroup>
 </Project>

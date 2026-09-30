@@ -1,0 +1,100 @@
+asyncapi: 2.6.0
+info:
+  title: BLT Orders → Notifications
+  version: 8.0.0
+defaultContentType: application/json
+servers:
+  local:
+    url: blt-streaming-kafka:9092
+    protocol: kafka
+    description: Apache Kafka, namespace blt
+channels:
+  blt.order.events.v1:
+    description: Key = orderId. Orders публикует; consumer group blt.notifications.v1
+      сохраняет письма. Offset подтверждается после записи в PostgreSQL.
+    publish:
+      operationId: publishOrderCompleted
+      message:
+        $ref: '#/components/messages/OrderCompleted'
+components:
+  messages:
+    OrderCompleted:
+      name: OrderCompleted
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/OrderCompleted'
+      correlationId:
+        location: $message.payload#/data/orderId
+      bindings:
+        kafka:
+          key:
+            type: string
+            format: uuid
+          bindingVersion: 0.4.0
+  schemas:
+    OrderCompleted:
+      type: object
+      required:
+      - specversion
+      - id
+      - source
+      - type
+      - subject
+      - time
+      - datacontenttype
+      - data
+      properties:
+        specversion:
+          type: string
+          enum:
+          - '1.0'
+        id: &id002
+          type: string
+          format: uuid
+        source: &id001
+          type: string
+        type:
+          type: string
+          enum:
+          - com.blt.order.completed.v1
+        subject: *id001
+        time:
+          type: string
+          format: date-time
+        datacontenttype:
+          type: string
+          enum:
+          - application/json
+        data:
+          type: object
+          required:
+          - orderId
+          - userId
+          - email
+          - price
+          - status
+          - reason
+          properties:
+            orderId: *id002
+            userId:
+              type: integer
+              format: int64
+              minimum: 1
+            email:
+              type: string
+              format: email
+            price:
+              type: integer
+              format: int64
+              minimum: 1
+              maximum: 1000000000000
+              description: Целое число копеек RUB.
+            status:
+              type: string
+              enum:
+              - paid
+              - rejected
+            reason:
+              type:
+              - string
+              - 'null'

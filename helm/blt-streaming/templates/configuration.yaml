@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Release.Name }}-credentials
+type: Opaque
+stringData:
+  database-password: {{ .Values.database.password | quote }}
+  internal-api-key: {{ .Values.internalApiKey | quote }}
+{{- range .Values.services }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-{{ .name }}
+data:
+  ASPNETCORE_URLS: http://+:8000
+  Database__Host: {{ $.Release.Name }}-{{ .name }}-db
+  Database__Name: {{ .name }}
+  Database__Username: {{ .name }}
+  Users__BaseUrl: http://{{ $.Release.Name }}-users:8000
+  Billing__BaseUrl: http://{{ $.Release.Name }}-billing:8000
+  Kafka__BootstrapServers: {{ $.Release.Name }}-kafka:9092
+{{- end }}

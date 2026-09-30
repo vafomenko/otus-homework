@@ -1,0 +1,14 @@
+ user_id | balance 
+---------+---------
+       1 |    6500
+       2 |       0
+(2 rows)
+
+    kind    | amount |  status   | balance |       reason       
+------------+--------+-----------+---------+--------------------
+ deposit    |  10000 | succeeded |   10000 | 
+ charge     |   3000 | succeeded |    7000 | 
+ charge     |   8000 | rejected  |    7000 | insufficient_funds
+ withdrawal |    500 | succeeded |    6500 | 
+(4 rows)
+

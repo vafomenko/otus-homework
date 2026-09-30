@@ -18,7 +18,7 @@ public static class AuthEndpoints
     }
 
     private static async Task<IResult> RegisterAsync(RegisterRequest? request, AuthRepository repository,
-        PasswordService passwords, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
+        PasswordService passwords, BillingAccounts billing, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
     {
         if (AuthValidation.ValidateRegistration(request) is { } error)
             return Results.BadRequest(new ErrorResponse(400, error));
@@ -26,6 +26,7 @@ public static class AuthEndpoints
         {
             var user = await repository.RegisterAsync(UserValidation.Normalize(request!.Profile),
                 passwords.Hash(request.Password!), cancellationToken);
+            await billing.CreateAsync(user.Id, cancellationToken);
             loggerFactory.CreateLogger("Auth").LogInformation("{event}: registered user {user_id}", "user_registered", user.Id);
             return Results.Created($"/user/{user.Id}", user);
         }

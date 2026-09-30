@@ -1,0 +1,639 @@
+openapi: 3.0.3
+info:
+  title: 'Теория: только HTTP'
+  version: 8.0.0
+  description: Синхронные Users → Billing и Orders → Billing → Notifications. Kafka
+    не участвует.
+servers:
+- url: http://arch.homework
+security:
+- BearerSession: []
+paths:
+  /auth/register:
+    post:
+      operationId: register
+      description: Создаёт пользователя и счёт с нулевым балансом до ответа 201.
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+        '409':
+          description: Конфликт ключа операции или существующего пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Registration'
+      security: []
+  /auth/login:
+    post:
+      operationId: login
+      description: ''
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+      security: []
+  /profile:
+    get:
+      operationId: profile
+      description: Проверка сессии; используется новыми сервисами при каждом публичном
+        запросе.
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+  /billing/account:
+    get:
+      operationId: getAccount
+      description: Счёт текущего пользователя; 404, если не создан.
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+        '404':
+          description: Объект не найден
+  /billing/deposits:
+    post:
+      operationId: deposit
+      description: Пополнение учебного счёта. Повтор operationId с теми же параметрами
+        возвращает прежний результат; с другими — 409.
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+        '409':
+          description: Конфликт ключа операции или существующего пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoneyRequest'
+  /billing/withdrawals:
+    post:
+      operationId: withdraw
+      description: Списание со своего счёта. Недостаток средств — 200/status=rejected;
+        баланс остаётся прежним.
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+        '409':
+          description: Конфликт ключа операции или существующего пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoneyRequest'
+  /orders:
+    post:
+      operationId: createOrder
+      description: Orders вызывает Billing, затем POST /internal/notifications, и
+        возвращает 201 после сохранения письма.
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      description: Свой заказ; чужой или отсутствующий — 404.
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+        '404':
+          description: Объект не найден
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  /notifications:
+    get:
+      operationId: listNotifications
+      description: Сохранённые сообщения текущего пользователя. Для нового заказа
+        список может быть временно пустым.
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+      parameters:
+      - name: orderId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: sendNotification
+      description: Сохраняет сообщение на email текущего пользователя. Внешняя отправка
+        не выполняется.
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendNotification'
+  /internal/accounts:
+    post:
+      operationId: createAccount
+      description: Только Users → Billing, идемпотентно по userId. Недоступно через
+        ingress.
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountRequest'
+      security:
+      - ServiceKey: []
+    servers:
+    - url: http://blt-streaming-billing:8000
+      description: ClusterIP в namespace blt
+  /internal/charges:
+    post:
+      operationId: charge
+      description: Только Orders → Billing. orderId является ключом идемпотентности.
+        Недостаток средств — успешный HTTP-ответ с status=rejected.
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+        '409':
+          description: Конфликт ключа операции или существующего пользователя
+        '404':
+          description: Счёт не найден
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChargeRequest'
+      security:
+      - ServiceKey: []
+    servers:
+    - url: http://blt-streaming-billing:8000
+      description: ClusterIP в namespace blt
+  /internal/notifications:
+    servers:
+    - url: http://blt-streaming-notifications:8000
+    post:
+      operationId: saveInternalNotification
+      description: Сохранить письмо о результате заказа; eventId/orderId защищают
+        от дубликатов.
+      responses:
+        '201':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '400':
+          description: Некорректный запрос
+        '401':
+          description: Нет действующей сессии или служебного ключа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalNotification'
+      security:
+      - ServiceKey: []
+components:
+  securitySchemes:
+    BearerSession:
+      type: http
+      scheme: bearer
+    ServiceKey:
+      type: apiKey
+      in: header
+      name: X-Service-Key
+  schemas:
+    Registration:
+      type: object
+      required:
+      - username
+      - password
+      - firstName
+      - lastName
+      - email
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          minLength: 12
+          maxLength: 128
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+    User:
+      type: object
+      required:
+      - id
+      - username
+      - firstName
+      - lastName
+      - email
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+    Login:
+      type: object
+      required:
+      - username
+      - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    Session:
+      type: object
+      required:
+      - accessToken
+      - tokenType
+      - userId
+      - expiresAt
+      properties:
+        accessToken:
+          type: string
+        tokenType:
+          type: string
+          enum:
+          - Bearer
+        userId:
+          type: integer
+          format: int64
+          minimum: 1
+        expiresAt:
+          type: string
+          format: date-time
+    AccountRequest:
+      type: object
+      required:
+      - userId
+      properties:
+        userId:
+          type: integer
+          format: int64
+          minimum: 1
+    Account:
+      type: object
+      required:
+      - userId
+      - balance
+      - currency
+      properties:
+        userId:
+          type: integer
+          format: int64
+          minimum: 1
+        balance:
+          type: integer
+          format: int64
+          minimum: 0
+        currency:
+          type: string
+          enum:
+          - RUB
+    MoneyRequest:
+      type: object
+      required:
+      - operationId
+      - amount
+      properties:
+        operationId:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 1000000000000
+          description: Целое число копеек RUB.
+    ChargeRequest:
+      type: object
+      required:
+      - orderId
+      - userId
+      - amount
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        userId:
+          type: integer
+          format: int64
+          minimum: 1
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 1000000000000
+          description: Целое число копеек RUB.
+    Operation:
+      type: object
+      required:
+      - operationId
+      - userId
+      - amount
+      - kind
+      - status
+      - balance
+      - reason
+      properties:
+        operationId:
+          type: string
+          format: uuid
+        userId:
+          type: integer
+          format: int64
+          minimum: 1
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 1000000000000
+          description: Целое число копеек RUB.
+        kind:
+          type: string
+          enum:
+          - deposit
+          - withdrawal
+          - charge
+        status:
+          type: string
+          enum:
+          - succeeded
+          - rejected
+        balance:
+          type: integer
+          format: int64
+          minimum: 0
+        reason:
+          type: string
+          nullable: true
+    OrderRequest:
+      type: object
+      required:
+      - price
+      properties:
+        price:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 1000000000000
+          description: Целое число копеек RUB.
+    Order:
+      type: object
+      required:
+      - id
+      - userId
+      - price
+      - status
+      - reason
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: integer
+          format: int64
+          minimum: 1
+        price:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 1000000000000
+          description: Целое число копеек RUB.
+        status:
+          type: string
+          enum:
+          - processing
+          - paid
+          - rejected
+        reason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    SendNotification:
+      type: object
+      required:
+      - subject
+      - body
+      properties:
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 200
+        body:
+          type: string
+          minLength: 1
+          maxLength: 10000
+    InternalNotification:
+      type: object
+      required:
+      - eventId
+      - orderId
+      - userId
+      - email
+      - subject
+      - body
+      - outcome
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        userId:
+          type: integer
+          format: int64
+          minimum: 1
+        email:
+          type: string
+          format: email
+        subject:
+          type: string
+        body:
+          type: string
+        outcome:
+          type: string
+          enum:
+          - paid
+          - rejected
+    Notification:
+      type: object
+      required:
+      - id
+      - eventId
+      - orderId
+      - userId
+      - email
+      - subject
+      - body
+      - outcome
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+          nullable: true
+        userId:
+          type: integer
+          format: int64
+          minimum: 1
+        email:
+          type: string
+          format: email
+        subject:
+          type: string
+        body:
+          type: string
+        outcome:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time

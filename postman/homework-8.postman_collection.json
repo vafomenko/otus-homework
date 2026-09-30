@@ -1,0 +1,1052 @@
+{
+  "info": {
+    "name": "OTUS Homework 8 — Stream Processing / Apache Kafka",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Регистрация и биллинг, успешный и отклонённый заказ, проверка двух писем через Kafka, идемпотентность и авторизация. Суммы в копейках RUB. Polling ограничен 60 повторами. Newman печатает запросы и ответы."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://arch.homework",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.info.requestName === '01 Register user') {",
+          "  const run=pm.variables.replaceIn('{{$guid}}').replace(/-/g,'');",
+          "  pm.collectionVariables.set('username','hw8_'+run);",
+          "  pm.collectionVariables.set('email','hw8_'+run+'@example.com');",
+          "  pm.collectionVariables.set('otherUsername','hw8_b_'+run);",
+          "  pm.collectionVariables.set('otherEmail','hw8_b_'+run+'@example.com');",
+          "  pm.collectionVariables.set('password','Hw8!'+run);",
+          "  ['depositId','withdrawalId','invalidId'].forEach(k=>pm.collectionVariables.set(k,pm.variables.replaceIn('{{$guid}}')));",
+          "  pm.collectionVariables.unset('accessToken');",
+          "}",
+          "function redact(value) {",
+          "  if (Array.isArray(value)) return value.map(redact);",
+          "  if (value && typeof value==='object') return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,/password|token|authorization|service.key/i.test(k)?'[REDACTED]':redact(v)]));",
+          "  return value;",
+          "}",
+          "console.log('REQUEST',pm.request.method,pm.variables.replaceIn(pm.request.url.toString()));",
+          "console.log('REQUEST HEADERS',JSON.stringify(redact(pm.request.headers.toObject())));",
+          "if (pm.request.body && pm.request.body.raw) {",
+          "  const body=pm.variables.replaceIn(pm.request.body.raw);",
+          "  try { console.log('REQUEST BODY',JSON.stringify(redact(JSON.parse(body)))); } catch { console.log('REQUEST BODY',body); }",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "function redact(value) {",
+          "  if (Array.isArray(value)) return value.map(redact);",
+          "  if (value && typeof value==='object') return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,/password|token|authorization|service.key/i.test(k)?'[REDACTED]':redact(v)]));",
+          "  return value;",
+          "}",
+          "console.log('RESPONSE',pm.response.code,pm.response.status);",
+          "console.log('RESPONSE HEADERS',JSON.stringify(pm.response.headers.toObject()));",
+          "try { console.log('RESPONSE BODY',JSON.stringify(redact(pm.response.json()))); }",
+          "catch { console.log('RESPONSE BODY',pm.response.text()); }"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Register user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\",\n  \"firstName\": \"Иван\",\n  \"lastName\": \"Тестовый\",\n  \"email\": \"{{email}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('userId',pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('accessToken',pm.response.json().accessToken);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Billing account created automatically",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance = 0 kopecks', () => { const a=pm.response.json(); pm.expect(a.userId).to.eql(Number(pm.collectionVariables.get('userId'))); pm.expect(a.balance).to.eql(0); pm.expect(a.currency).to.eql('RUB'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Deposit 10000 kopecks",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/deposits",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"operationId\": \"{{depositId}}\",\n  \"amount\": 10000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Operation result', () => { const r=pm.response.json(); pm.expect(r.kind).to.eql('deposit'); pm.expect(r.status).to.eql('succeeded'); pm.expect(r.balance).to.eql(10000); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Place affordable order",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 3000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "",
+              "const order=pm.response.json();",
+              "pm.test('Order paid', () => { pm.expect(order.status).to.eql('paid'); pm.expect(order.price).to.eql(3000); pm.expect(order.userId).to.eql(Number(pm.collectionVariables.get('userId'))); pm.expect(order.id).to.be.a('string'); pm.expect(order.reason).to.eql(null); });",
+              "pm.collectionVariables.set('paidOrderId', order.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Money debited",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance = 7000 kopecks', () => { const a=pm.response.json(); pm.expect(a.userId).to.eql(Number(pm.collectionVariables.get('userId'))); pm.expect(a.balance).to.eql(7000); pm.expect(a.currency).to.eql('RUB'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Happy letter (poll Kafka consumer)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/notifications?orderId={{paidOrderId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "",
+              "const messages=pm.response.json();",
+              "const counter='poll_' + pm.info.requestName;",
+              "const attempt=Number(pm.collectionVariables.get(counter)||0);",
+              "if (Array.isArray(messages) && messages.length===0 && attempt<60) {",
+              "  pm.collectionVariables.set(counter,attempt+1);",
+              "  pm.execution.setNextRequest(pm.info.requestName);",
+              "  setTimeout(() => {}, 300);",
+              "} else {",
+              "  pm.collectionVariables.unset(counter);",
+              "  pm.test('Exactly one paid letter saved', () => {",
+              "    pm.expect(messages).to.be.an('array').with.lengthOf(1);",
+              "    const m=messages[0];",
+              "    pm.expect(m.orderId).to.eql(pm.collectionVariables.get('paidOrderId'));",
+              "    pm.expect(m.userId).to.eql(Number(pm.collectionVariables.get('userId')));",
+              "    pm.expect(m.email).to.eql(pm.collectionVariables.get('email'));",
+              "    pm.expect(m.outcome).to.eql('paid');",
+              "    pm.expect(m.subject).to.eql('Письмо счастья');",
+              "    pm.expect(m.body).to.include(m.orderId);",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Place unaffordable order",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 8000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "",
+              "const order=pm.response.json();",
+              "pm.test('Order rejected', () => { pm.expect(order.status).to.eql('rejected'); pm.expect(order.price).to.eql(8000); pm.expect(order.userId).to.eql(Number(pm.collectionVariables.get('userId'))); pm.expect(order.id).to.be.a('string'); pm.expect(order.reason).to.eql('insufficient_funds'); });",
+              "pm.collectionVariables.set('rejectedOrderId', order.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Balance unchanged",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance = 7000 kopecks', () => { const a=pm.response.json(); pm.expect(a.userId).to.eql(Number(pm.collectionVariables.get('userId'))); pm.expect(a.balance).to.eql(7000); pm.expect(a.currency).to.eql('RUB'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Sad letter (poll Kafka consumer)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/notifications?orderId={{rejectedOrderId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "",
+              "const messages=pm.response.json();",
+              "const counter='poll_' + pm.info.requestName;",
+              "const attempt=Number(pm.collectionVariables.get(counter)||0);",
+              "if (Array.isArray(messages) && messages.length===0 && attempt<60) {",
+              "  pm.collectionVariables.set(counter,attempt+1);",
+              "  pm.execution.setNextRequest(pm.info.requestName);",
+              "  setTimeout(() => {}, 300);",
+              "} else {",
+              "  pm.collectionVariables.unset(counter);",
+              "  pm.test('Exactly one rejected letter saved', () => {",
+              "    pm.expect(messages).to.be.an('array').with.lengthOf(1);",
+              "    const m=messages[0];",
+              "    pm.expect(m.orderId).to.eql(pm.collectionVariables.get('rejectedOrderId'));",
+              "    pm.expect(m.userId).to.eql(Number(pm.collectionVariables.get('userId')));",
+              "    pm.expect(m.email).to.eql(pm.collectionVariables.get('email'));",
+              "    pm.expect(m.outcome).to.eql('rejected');",
+              "    pm.expect(m.subject).to.eql('Письмо горя');",
+              "    pm.expect(m.body).to.include(m.orderId);",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 Both outcomes are persisted",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/notifications"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Two letters, one for each order', () => { const m=pm.response.json(); pm.expect(m).to.have.lengthOf(2); pm.expect(m.map(x=>x.outcome)).to.have.members(['paid','rejected']); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Read paid order",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/orders/{{paidOrderId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Persisted paid order',()=>pm.expect(pm.response.json().status).to.eql('paid'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 Negative deposit rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/deposits",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"operationId\": \"{{invalidId}}\",\n  \"amount\": -1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 Zero price rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 Fractional price rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 0.5\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 Withdraw money directly",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/withdrawals",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"operationId\": \"{{withdrawalId}}\",\n  \"amount\": 500\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Operation result', () => { const r=pm.response.json(); pm.expect(r.kind).to.eql('withdrawal'); pm.expect(r.status).to.eql('succeeded'); pm.expect(r.balance).to.eql(6500); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 Retry withdrawal is idempotent",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/withdrawals",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"operationId\": \"{{withdrawalId}}\",\n  \"amount\": 500\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Operation result', () => { const r=pm.response.json(); pm.expect(r.kind).to.eql('withdrawal'); pm.expect(r.status).to.eql('succeeded'); pm.expect(r.balance).to.eql(6500); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 Changed retry rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/withdrawals",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"operationId\": \"{{withdrawalId}}\",\n  \"amount\": 501\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 409', () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 Confirm final balance",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance = 6500 kopecks', () => { const a=pm.response.json(); pm.expect(a.userId).to.eql(Number(pm.collectionVariables.get('userId'))); pm.expect(a.balance).to.eql(6500); pm.expect(a.currency).to.eql('RUB'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "20 Notification API saves a message",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/notifications",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"subject\": \"Проверка API\",\n  \"body\": \"Тестовое сообщение на собственный email.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "pm.test('Recipient is authenticated user',()=>pm.expect(pm.response.json().email).to.eql(pm.collectionVariables.get('email')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21 Direct message persisted",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/notifications"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Three saved messages',()=>{const m=pm.response.json();pm.expect(m).to.have.lengthOf(3);pm.expect(m.some(x=>x.subject==='Проверка API')).to.eql(true);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "22 Anonymous balance denied",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account",
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "23 Anonymous order denied",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 100\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "24 Anonymous notifications denied",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/notifications",
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "25 Register another user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{otherUsername}}\",\n  \"password\": \"{{password}}\",\n  \"firstName\": \"Иван\",\n  \"lastName\": \"Тестовый\",\n  \"email\": \"{{otherEmail}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "26 Login as another user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{otherUsername}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('accessToken',pm.response.json().accessToken);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "27 Another user cannot read the order",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/orders/{{paidOrderId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "28 Another user has no letters",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/notifications?orderId={{paidOrderId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('No foreign messages',()=>pm.expect(pm.response.json()).to.eql([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "29 Another account is empty",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Separate balance',()=>pm.expect(pm.response.json().balance).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

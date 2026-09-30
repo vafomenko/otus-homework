@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1182" viewBox="0 0 1440 1182" font-family="Arial, sans-serif">
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="none" stroke="#334155" stroke-width="1.5"/></marker></defs>
+<rect width="1440" height="1182" fill="#f8fafc"/>
+<text x="44" y="44" font-size="26" fill="#1e293b" text-anchor="start">2 · HTTP + Kafka для уведомлений — реализованный вариант</text>
+<rect x="26.0" y="70" width="168" height="55" rx="12" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="110.0" y="100" font-size="18" fill="#1e293b" text-anchor="middle">Клиент</text>
+<line x1="110.0" y1="125" x2="110.0" y2="1147" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="331.0" y="70" width="168" height="55" rx="12" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="415.0" y="100" font-size="18" fill="#1e293b" text-anchor="middle">Orders</text>
+<line x1="415.0" y1="125" x2="415.0" y2="1147" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="636.0" y="70" width="168" height="55" rx="12" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="720.0" y="100" font-size="18" fill="#1e293b" text-anchor="middle">Billing</text>
+<line x1="720.0" y1="125" x2="720.0" y2="1147" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="941.0" y="70" width="168" height="55" rx="12" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="1025.0" y="100" font-size="18" fill="#1e293b" text-anchor="middle">Kafka</text>
+<line x1="1025.0" y1="125" x2="1025.0" y2="1147" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1246.0" y="70" width="168" height="55" rx="12" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="1330.0" y="100" font-size="18" fill="#1e293b" text-anchor="middle">Notifications</text>
+<line x1="1330.0" y1="125" x2="1330.0" y2="1147" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="40" y="142" width="1360" height="42" rx="7" fill="#e2e8f0"/>
+<text x="720.0" y="169" font-size="16" fill="#1e293b" text-anchor="middle">POST /auth/register → Users → Billing: создать счёт; затем пополнение через /billing/deposits</text>
+<line x1="110.0" y1="232" x2="415.0" y2="232" stroke="#334155" stroke-width="1.7"  marker-end="url(#arrow)"/>
+<text x="262.5" y="223.0" font-size="14" fill="#1e293b" text-anchor="middle">POST /orders {price}</text>
+<line x1="415.0" y1="294" x2="720.0" y2="294" stroke="#334155" stroke-width="1.7"  marker-end="url(#arrow)"/>
+<text x="567.5" y="285.0" font-size="14" fill="#1e293b" text-anchor="middle">POST /internal/charges</text>
+<rect x="40" y="328" width="1360" height="38" fill="#dcfce7"/>
+<text x="65" y="353" font-size="15" fill="#1e293b" text-anchor="start">ALT — Средств достаточно</text>
+<line x1="720.0" y1="418" x2="415.0" y2="418" stroke="#334155" stroke-width="1.7" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text x="567.5" y="409.0" font-size="14" fill="#1e293b" text-anchor="middle">200 succeeded; баланс уменьшен</text>
+<rect x="40" y="452" width="1360" height="38" fill="#fee2e2"/>
+<text x="65" y="477" font-size="15" fill="#1e293b" text-anchor="start">ELSE — Недостаточно средств</text>
+<line x1="720.0" y1="542" x2="415.0" y2="542" stroke="#334155" stroke-width="1.7" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text x="567.5" y="533.0" font-size="14" fill="#1e293b" text-anchor="middle">200 rejected; баланс прежний</text>
+<rect x="40" y="576" width="1360" height="38" fill="#e2e8f0"/>
+<text x="65" y="601" font-size="15" fill="#1e293b" text-anchor="start">END</text>
+<rect x="40" y="638" width="1360" height="42" rx="7" fill="#e2e8f0"/>
+<text x="720.0" y="665" font-size="16" fill="#1e293b" text-anchor="middle">Orders: одна транзакция PostgreSQL сохраняет paid/rejected и событие в outbox</text>
+<line x1="415.0" y1="728" x2="110.0" y2="728" stroke="#334155" stroke-width="1.7" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text x="262.5" y="719.0" font-size="14" fill="#1e293b" text-anchor="middle">201 {id, status: paid | rejected}</text>
+<line x1="415.0" y1="790" x2="1025.0" y2="790" stroke="#334155" stroke-width="1.7"  marker-end="url(#arrow)"/>
+<text x="720.0" y="781.0" font-size="14" fill="#1e293b" text-anchor="middle">Outbox → OrderCompleted.v1 (key = orderId)</text>
+<line x1="1025.0" y1="852" x2="1330.0" y2="852" stroke="#334155" stroke-width="1.7"  marker-end="url(#arrow)"/>
+<text x="1177.5" y="843.0" font-size="14" fill="#1e293b" text-anchor="middle">OrderCompleted.v1</text>
+<rect x="40" y="886" width="1360" height="42" rx="7" fill="#e2e8f0"/>
+<text x="720.0" y="913" font-size="16" fill="#1e293b" text-anchor="middle">Notifications: сохранить Письмо счастья / Письмо горя; eventId и orderId UNIQUE</text>
+<line x1="1330.0" y1="976" x2="1025.0" y2="976" stroke="#334155" stroke-width="1.7" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text x="1177.5" y="967.0" font-size="14" fill="#1e293b" text-anchor="middle">Commit offset после записи в БД</text>
+<line x1="110.0" y1="1038" x2="1330.0" y2="1038" stroke="#334155" stroke-width="1.7"  marker-end="url(#arrow)"/>
+<text x="720.0" y="1029.0" font-size="14" fill="#1e293b" text-anchor="middle">GET /notifications?orderId=... (poll)</text>
+<line x1="1330.0" y1="1100" x2="110.0" y2="1100" stroke="#334155" stroke-width="1.7" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text x="720.0" y="1091.0" font-size="14" fill="#1e293b" text-anchor="middle">200: сохранённое письмо</text>
+</svg>

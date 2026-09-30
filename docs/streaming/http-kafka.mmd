@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant C as Клиент
+    participant O as Orders
+    participant B as Billing
+    participant K as Kafka
+    participant N as Notifications
+    Note over C,N: POST /auth/register → Users → Billing: создать счёт; затем пополнение через /billing/deposits
+    C->>O: POST /orders {price}
+    O->>B: POST /internal/charges
+    alt Средств достаточно
+    B-->>O: 200 succeeded; баланс уменьшен
+    else Недостаточно средств
+    B-->>O: 200 rejected; баланс прежний
+    end
+    Note over C,N: Orders: одна транзакция PostgreSQL сохраняет paid/rejected и событие в outbox
+    O-->>C: 201 {id, status: paid | rejected}
+    O->>K: Outbox → OrderCompleted.v1 (key = orderId)
+    K->>N: OrderCompleted.v1
+    Note over C,N: Notifications: сохранить Письмо счастья / Письмо горя; eventId и orderId UNIQUE
+    N-->>K: Commit offset после записи в БД
+    C->>N: GET /notifications?orderId=... (poll)
+    N-->>C: 200: сохранённое письмо

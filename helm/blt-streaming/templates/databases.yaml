@@ -1,0 +1,51 @@
+{{- range .Values.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Release.Name }}-{{ .name }}-db
+spec:
+  selector: {app: {{ $.Release.Name }}-{{ .name }}-db}
+  ports: [{name: postgres, port: 5432}]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $.Release.Name }}-{{ .name }}-db
+spec:
+  serviceName: {{ $.Release.Name }}-{{ .name }}-db
+  replicas: 1
+  selector:
+    matchLabels: {app: {{ $.Release.Name }}-{{ .name }}-db}
+  template:
+    metadata:
+      labels: {app: {{ $.Release.Name }}-{{ .name }}-db}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: postgres
+          image: {{ $.Values.database.image }}
+          env:
+            - {name: POSTGRES_USER, value: {{ .name | quote }}}
+            - {name: POSTGRES_DB, value: {{ .name | quote }}}
+            - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: {{ $.Release.Name }}-credentials, key: database-password}
+          ports: [{name: postgres, containerPort: 5432}]
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, {{ .name }}, -d, {{ .name }}]
+            periodSeconds: 3
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: "1", memory: 256Mi}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/postgresql/data}
+  volumeClaimTemplates:
+    - metadata: {name: data}
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests: {storage: {{ $.Values.database.storage }}}
+{{- end }}

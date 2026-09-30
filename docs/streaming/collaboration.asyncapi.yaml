@@ -1,0 +1,280 @@
+asyncapi: 2.6.0
+info:
+  title: 'Теория: Event Collaboration'
+  version: 8.0.0
+defaultContentType: application/json
+servers:
+  local:
+    url: blt-streaming-kafka:9092
+    protocol: kafka
+    description: Apache Kafka, namespace blt
+channels:
+  blt.order.events.v1:
+    description: Orders publishes OrderCreated and OrderCompleted. Billing consumes
+      OrderCreated; Notifications consumes OrderCompleted, in separate consumer groups.
+    publish:
+      operationId: orderFacts
+      message:
+        oneOf:
+        - $ref: '#/components/messages/OrderCreated'
+        - $ref: '#/components/messages/OrderCompleted'
+  blt.billing.events.v1:
+    description: Billing publishes the result. Orders consumes in group blt.orders.v1
+      and completes the order.
+    subscribe:
+      operationId: paymentFacts
+      message:
+        oneOf:
+        - $ref: '#/components/messages/PaymentSucceeded'
+        - $ref: '#/components/messages/PaymentDeclined'
+components:
+  messages:
+    OrderCompleted:
+      name: OrderCompleted
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/OrderCompleted'
+      correlationId:
+        location: $message.payload#/data/orderId
+      bindings:
+        kafka:
+          key:
+            type: string
+            format: uuid
+          bindingVersion: 0.4.0
+    OrderCreated:
+      name: OrderCreated
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/OrderCreated'
+      correlationId:
+        location: $message.payload#/data/orderId
+      bindings:
+        kafka:
+          key:
+            type: string
+            format: uuid
+          bindingVersion: 0.4.0
+    PaymentSucceeded:
+      name: PaymentSucceeded
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PaymentSucceeded'
+      correlationId:
+        location: $message.payload#/data/orderId
+      bindings:
+        kafka:
+          key:
+            type: string
+            format: uuid
+          bindingVersion: 0.4.0
+    PaymentDeclined:
+      name: PaymentDeclined
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PaymentDeclined'
+      correlationId:
+        location: $message.payload#/data/orderId
+      bindings:
+        kafka:
+          key:
+            type: string
+            format: uuid
+          bindingVersion: 0.4.0
+  schemas:
+    OrderCompleted:
+      type: object
+      required:
+      - specversion
+      - id
+      - source
+      - type
+      - subject
+      - time
+      - datacontenttype
+      - data
+      properties:
+        specversion:
+          type: string
+          enum:
+          - '1.0'
+        id:
+          type: string
+          format: uuid
+        source:
+          type: string
+        type:
+          type: string
+          enum:
+          - com.blt.order.completed.v1
+        subject:
+          type: string
+        time:
+          type: string
+          format: date-time
+        datacontenttype:
+          type: string
+          enum:
+          - application/json
+        data:
+          type: object
+          required:
+          - orderId
+          - userId
+          - email
+          - price
+          - status
+          - reason
+          properties:
+            orderId:
+              type: string
+              format: uuid
+            userId:
+              type: integer
+              format: int64
+              minimum: 1
+            email:
+              type: string
+              format: email
+            price:
+              type: integer
+              format: int64
+              minimum: 1
+              maximum: 1000000000000
+              description: Целое число копеек RUB.
+            status:
+              type: string
+              enum:
+              - paid
+              - rejected
+            reason:
+              type:
+              - string
+              - 'null'
+    OrderCreated:
+      type: object
+      required:
+      - specversion
+      - id
+      - source
+      - type
+      - subject
+      - time
+      - datacontenttype
+      - data
+      properties:
+        specversion:
+          type: string
+          enum:
+          - '1.0'
+        id: &id002
+          type: string
+          format: uuid
+        source: &id001
+          type: string
+        type:
+          type: string
+          enum:
+          - com.blt.order.created.v1
+        subject: *id001
+        time:
+          type: string
+          format: date-time
+        datacontenttype:
+          type: string
+          enum:
+          - application/json
+        data:
+          type: object
+          required:
+          - orderId
+          - userId
+          - price
+          properties:
+            orderId: *id002
+            userId: &id003
+              type: integer
+              format: int64
+              minimum: 1
+            price: &id004
+              type: integer
+              format: int64
+              minimum: 1
+              maximum: 1000000000000
+              description: Целое число копеек RUB.
+    PaymentSucceeded:
+      type: object
+      required:
+      - specversion
+      - id
+      - source
+      - type
+      - subject
+      - time
+      - datacontenttype
+      - data
+      properties:
+        specversion:
+          type: string
+          enum:
+          - '1.0'
+        id: *id002
+        source: *id001
+        type:
+          type: string
+          enum:
+          - com.blt.payment.succeeded.v1
+        subject: *id001
+        time:
+          type: string
+          format: date-time
+        datacontenttype:
+          type: string
+          enum:
+          - application/json
+        data: &id005
+          type: object
+          required:
+          - orderId
+          - userId
+          - amount
+          - reason
+          properties:
+            orderId: *id002
+            userId: *id003
+            amount: *id004
+            reason:
+              type:
+              - string
+              - 'null'
+    PaymentDeclined:
+      type: object
+      required:
+      - specversion
+      - id
+      - source
+      - type
+      - subject
+      - time
+      - datacontenttype
+      - data
+      properties:
+        specversion:
+          type: string
+          enum:
+          - '1.0'
+        id: *id002
+        source: *id001
+        type:
+          type: string
+          enum:
+          - com.blt.payment.declined.v1
+        subject: *id001
+        time:
+          type: string
+          format: date-time
+        datacontenttype:
+          type: string
+          enum:
+          - application/json
+        data: *id005

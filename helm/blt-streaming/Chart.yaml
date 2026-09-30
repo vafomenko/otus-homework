@@ -1,0 +1,6 @@
+apiVersion: v2
+name: blt-streaming
+description: OTUS homework 8 - Users, Orders, Billing, Notifications and Apache Kafka
+type: application
+version: 8.0.0
+appVersion: "8.0.0"

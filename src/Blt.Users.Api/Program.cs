@@ -45,6 +45,7 @@ builder.Services.AddSingleton<MigrationRunner>();
 builder.Services.AddSingleton<DatabaseReadiness>();
 builder.Services.AddSingleton<UserRepository>();
 builder.Services.AddSingleton<AuthRepository>();
+builder.Services.AddHttpClient<BillingAccounts>();
 builder.Services.AddSingleton<PasswordService>();
 builder.Services.AddOptions<AuthSessionOptions>().BindConfiguration("Session")
     .Validate(options => options.LifetimeMinutes is >= 1 and <= 1440, "Session lifetime must be between 1 and 1440 minutes.")

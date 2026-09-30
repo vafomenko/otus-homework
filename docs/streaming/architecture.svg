@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="910" viewBox="0 0 1440 910" font-family="Arial, sans-serif">
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="none" stroke="#334155" stroke-width="1.5"/></marker></defs>
+<rect width="1440" height="910" fill="#f8fafc"/>
+<text x="44" y="44" font-size="26" fill="#1e293b" text-anchor="start">BLT · Stream Processing · Apache Kafka</text>
+<rect x="535" y="78" width="370" height="75" rx="12" fill="#e0e7ff" stroke="#94a3b8"/>
+<text x="720.0" y="108" font-size="18" fill="#1e293b" text-anchor="middle">Postman / Newman</text>
+<text x="720.0" y="133" font-size="14" fill="#475569" text-anchor="middle">http://arch.homework</text>
+<rect x="535" y="207" width="370" height="75" rx="12" fill="#e0e7ff" stroke="#94a3b8"/>
+<text x="720.0" y="237" font-size="18" fill="#1e293b" text-anchor="middle">Ingress</text>
+<text x="720.0" y="262" font-size="14" fill="#475569" text-anchor="middle">namespace: ingress-nginx</text>
+<line x1="720" y1="153" x2="720" y2="207" stroke="#334155" stroke-width="1.7"  marker-end="url(#arrow)"/>
+<text x="720.0" y="171.0" font-size="14" fill="#1e293b" text-anchor="middle">HTTP</text>
+<rect x="55" y="405" width="280" height="78" rx="12" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="195.0" y="435" font-size="18" fill="#1e293b" text-anchor="middle">Users</text>
+<text x="195.0" y="460" font-size="14" fill="#475569" text-anchor="middle">.NET 10 · namespace: blt</text>
+<rect x="55" y="733" width="280" height="70" rx="12" fill="#e2e8f0" stroke="#94a3b8"/>
+<text x="195.0" y="763" font-size="18" fill="#1e293b" text-anchor="middle">Users DB</text>
+<text x="195.0" y="788" font-size="14" fill="#475569" text-anchor="middle">PostgreSQL · собственная БД</text>
+<line x1="195" y1="483" x2="195" y2="733" stroke="#334155" stroke-width="1.7"  marker-end="url(#arrow)"/>
+<rect x="395" y="405" width="280" height="78" rx="12" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="535.0" y="435" font-size="18" fill="#1e293b" text-anchor="middle">Billing</text>
+<text x="535.0" y="460" font-size="14" fill="#475569" text-anchor="middle">.NET 10 · namespace: blt</text>
+<rect x="395" y="733" width="280" height="70" rx="12" fill="#e2e8f0" stroke="#94a3b8"/>
+<text x="535.0" y="763" font-size="18" fill="#1e293b" text-anchor="middle">Billing DB</text>
+<text x="535.0" y="788" font-size="14" fill="#475569" text-anchor="middle">PostgreSQL · собственная БД</text>
+<line x1="535" y1="483" x2="535" y2="733" stroke="#334155" stroke-width="1.7"  marker-end="url(#arrow)"/>
+<rect x="735" y="405" width="280" height="78" rx="12" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="875.0" y="435" font-size="18" fill="#1e293b" text-anchor="middle">Orders</text>
+<text x="875.0" y="460" font-size="14" fill="#475569" text-anchor="middle">.NET 10 · namespace: blt</text>
+<rect x="735" y="733" width="280" height="70" rx="12" fill="#e2e8f0" stroke="#94a3b8"/>
+<text x="875.0" y="763" font-size="18" fill="#1e293b" text-anchor="middle">Orders DB</text>
+<text x="875.0" y="788" font-size="14" fill="#475569" text-anchor="middle">PostgreSQL · собственная БД</text>
+<path d="M875,483 V520 H1045 V700 H875 V733" fill="none" stroke="#334155" stroke-width="1.7" marker-end="url(#arrow)"/>
+<rect x="1075" y="405" width="280" height="78" rx="12" fill="#dbeafe" stroke="#94a3b8"/>
+<text x="1215.0" y="435" font-size="18" fill="#1e293b" text-anchor="middle">Notifications</text>
+<text x="1215.0" y="460" font-size="14" fill="#475569" text-anchor="middle">.NET 10 · namespace: blt</text>
+<rect x="1075" y="733" width="280" height="70" rx="12" fill="#e2e8f0" stroke="#94a3b8"/>
+<text x="1215.0" y="763" font-size="18" fill="#1e293b" text-anchor="middle">Notifications DB</text>
+<text x="1215.0" y="788" font-size="14" fill="#475569" text-anchor="middle">PostgreSQL · собственная БД</text>
+<line x1="1215" y1="483" x2="1215" y2="733" stroke="#334155" stroke-width="1.7"  marker-end="url(#arrow)"/>
+<path d="M720,282 V325 H195 V405 M720,325 H1215 V405 M535,325 V405 M875,325 V405" fill="none" stroke="#334155" stroke-width="1.7"/>
+<text x="195" y="364" font-size="16" fill="#1e293b" text-anchor="middle">/auth, /profile</text>
+<text x="535" y="364" font-size="16" fill="#1e293b" text-anchor="middle">/billing</text>
+<text x="875" y="364" font-size="16" fill="#1e293b" text-anchor="middle">/orders</text>
+<text x="1215" y="364" font-size="16" fill="#1e293b" text-anchor="middle">/notifications</text>
+<line x1="335" y1="447" x2="395" y2="447" stroke="#334155" stroke-width="1.7"  marker-end="url(#arrow)"/>
+<text x="366" y="506" font-size="14" fill="#1e293b" text-anchor="middle">Счёт</text>
+<line x1="735" y1="447" x2="675" y2="447" stroke="#334155" stroke-width="1.7"  marker-end="url(#arrow)"/>
+<text x="704" y="506" font-size="14" fill="#1e293b" text-anchor="middle">Списание</text>
+<rect x="620" y="570" width="400" height="88" rx="12" fill="#ffedd5" stroke="#94a3b8"/>
+<text x="820.0" y="600" font-size="18" fill="#1e293b" text-anchor="middle">Apache Kafka · KRaft</text>
+<text x="820.0" y="625" font-size="14" fill="#475569" text-anchor="middle">blt.order.events.v1 · key = orderId</text>
+<path d="M1015,483 V540 H940 V570" fill="none" stroke="#334155" stroke-width="1.7" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text x="1090" y="539" font-size="14" fill="#1e293b" text-anchor="middle">Outbox → событие</text>
+<path d="M1020,614 H1135 V483" fill="none" stroke="#334155" stroke-width="1.7" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text x="1135" y="640" font-size="14" fill="#1e293b" text-anchor="middle">OrderCompleted</text>
+<text x="45" y="852" font-size="17" fill="#1e293b" text-anchor="start">Сплошная линия: HTTP / SQL. Пунктир: события. Каждое письмо сохраняется в БД; SMTP не используется.</text>
+<text x="45" y="880" font-size="16" fill="#1e293b" text-anchor="start">Bearer-сессии проверяются через Users /profile. Внутренние HTTP-вызовы защищены X-Service-Key.</text>
+</svg>

@@ -1,0 +1,5 @@
+
+GROUP                TOPIC               PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                            HOST            CLIENT-ID
+blt.notifications.v1 blt.order.events.v1 0          2               2               0               blt-notifications-2d469fef-e9c9-4fb8-9e42-133408452e61 /10.244.0.29    blt-notifications
+blt.notifications.v1 blt.order.events.v1 1          -               0               -               blt-notifications-2d469fef-e9c9-4fb8-9e42-133408452e61 /10.244.0.29    blt-notifications
+blt.notifications.v1 blt.order.events.v1 2          -               0               -               blt-notifications-2d469fef-e9c9-4fb8-9e42-133408452e61 /10.244.0.29    blt-notifications

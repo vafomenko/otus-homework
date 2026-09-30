@@ -1,0 +1,16 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+ARG SERVICE
+WORKDIR /source
+COPY global.json Directory.Build.props ./
+COPY src/ src/
+RUN dotnet publish src/Blt.${SERVICE}.Api/Blt.${SERVICE}.Api.csproj -c Release -o /app/publish -p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+ARG SERVICE
+WORKDIR /app
+COPY --from=build /app/publish ./
+ENV ASPNETCORE_URLS=http://+:8000
+ENV SERVICE_ASSEMBLY=Blt.${SERVICE}.Api.dll
+EXPOSE 8000
+USER $APP_UID
+ENTRYPOINT ["sh", "-c", "exec dotnet \"$SERVICE_ASSEMBLY\" \"$@\"", "--"]

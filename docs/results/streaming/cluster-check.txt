@@ -1,0 +1,17 @@
+NAME                                           READY   STATUS      RESTARTS        AGE     IP            NODE                     NOMINATED NODE   READINESS GATES
+blt-streaming-billing-5bb88df5d8-hkffm         1/1     Running     0               88s     10.244.0.27   otus-hw8-control-plane   <none>           <none>
+blt-streaming-billing-db-0                     1/1     Running     0               7m14s   10.244.0.21   otus-hw8-control-plane   <none>           <none>
+blt-streaming-kafka-0                          1/1     Running     1 (2m55s ago)   7m14s   10.244.0.22   otus-hw8-control-plane   <none>           <none>
+blt-streaming-notifications-564d9f889d-wtl95   1/1     Running     0               82s     10.244.0.29   otus-hw8-control-plane   <none>           <none>
+blt-streaming-notifications-db-0               1/1     Running     0               7m14s   10.244.0.20   otus-hw8-control-plane   <none>           <none>
+blt-streaming-orders-59bdb96b85-w6kxm          1/1     Running     0               85s     10.244.0.28   otus-hw8-control-plane   <none>           <none>
+blt-streaming-orders-db-0                      1/1     Running     0               7m14s   10.244.0.18   otus-hw8-control-plane   <none>           <none>
+blt-streaming-topics-2-hqt8j                   0/1     Completed   0               46s     10.244.0.30   otus-hw8-control-plane   <none>           <none>
+blt-streaming-users-7cb4f54b45-pgfht           1/1     Running     0               92s     10.244.0.26   otus-hw8-control-plane   <none>           <none>
+blt-streaming-users-db-0                       1/1     Running     0               7m14s   10.244.0.19   otus-hw8-control-plane   <none>           <none>
+NAME                                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+data-blt-streaming-billing-db-0         Bound    pvc-a63b664e-1070-4cae-8bb3-533ff174593b   1Gi        RWO            standard       <unset>                 7m14s
+data-blt-streaming-kafka-0              Bound    pvc-362c244c-bc68-478f-a55b-fe63595c347a   2Gi        RWO            standard       <unset>                 7m14s
+data-blt-streaming-notifications-db-0   Bound    pvc-de98d991-1ada-4cfc-88aa-f44e021d7120   1Gi        RWO            standard       <unset>                 7m14s
+data-blt-streaming-orders-db-0          Bound    pvc-bcaf1fcd-5b9b-4fa1-bf68-b8ac69bba3e9   1Gi        RWO            standard       <unset>                 7m14s
+data-blt-streaming-users-db-0           Bound    pvc-4a7b4f59-198d-4d33-a6aa-d06600a9afb8   1Gi        RWO            standard       <unset>                 7m14s

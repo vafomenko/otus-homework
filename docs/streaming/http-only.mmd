@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant C as Клиент
+    participant O as Orders
+    participant B as Billing
+    participant N as Notifications
+    Note over C,N: Предусловие: пользователь зарегистрирован, счёт создан, деньги внесены
+    C->>O: POST /orders {price}
+    O->>B: POST /internal/charges {orderId, userId, amount}
+    alt Средств достаточно
+    B-->>O: 200 succeeded; баланс уменьшен
+    O->>N: POST /internal/notifications: Письмо счастья
+    N-->>O: 201: письмо сохранено в БД
+    else Недостаточно средств
+    B-->>O: 200 rejected; баланс прежний
+    O->>N: POST /internal/notifications: Письмо горя
+    N-->>O: 201: письмо сохранено в БД
+    end
+    O-->>C: 201 {id, status: paid | rejected}
+    C->>N: GET /notifications
+    N-->>C: 200: список писем

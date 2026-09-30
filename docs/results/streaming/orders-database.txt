@@ -1,0 +1,11 @@
+                  id                  | user_id | price |  status  |       reason       
+--------------------------------------+---------+-------+----------+--------------------
+ c9ce609e-5750-43b4-939c-a0961392d3d4 |       1 |  3000 | paid     | 
+ eccec61a-c8d1-4700-bdf4-ffddb78d1994 |       1 |  8000 | rejected | insufficient_funds
+(2 rows)
+
+ events | published 
+--------+-----------
+      2 |         2
+(1 row)
+

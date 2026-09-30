@@ -1,52 +1,51 @@
-# Домашнее задание № 7 — аутентификация и авторизация
+# Домашнее задание №8 — Stream Processing
 
-Регистрация, вход, просмотр и изменение собственного профиля на .NET 10 и
-PostgreSQL. Без действующей сессии API возвращает **401**, при обращении к
-чужому профилю — **403**. Выход отзывает токен на всех репликах приложения.
+Сервисы заказов, биллинга и уведомлений на .NET 10, PostgreSQL и **Apache Kafka**.
+Регистрация создаёт счёт; заказ списывает деньги через Billing и публикует
+результат в Kafka. Notifications сохраняет «Письмо счастья» или «Письмо горя».
 
 ## Материалы для сдачи
 
-- [Архитектура, установка, namespaces и запуск тестов](docs/authentication.md).
-- [Схема взаимодействия сервисов — PNG](docs/authentication-architecture.png)
-  и [исходник SVG](docs/authentication-architecture.svg).
-- [Helm-чарт](helm/blt-users-api) и [Kubernetes-манифесты](k8s).
-- [Postman-коллекция](postman/homework-7.postman_collection.json) и
-  [окружение](postman/homework-7.postman_environment.json): `baseUrl = http://arch.homework`.
-- [OpenAPI](docs/openapi.yaml).
-- [Результаты проверок](docs/results/authentication/README.md).
+- [Архитектура, три варианта взаимодействия и инструкция](docs/streaming/README.md).
+- [Схема сервисов — PNG](docs/streaming/architecture.png).
+- Sequence-диаграммы: [HTTP](docs/streaming/http-only.png),
+  [HTTP + Kafka](docs/streaming/http-kafka.png),
+  [Event Collaboration](docs/streaming/event-collaboration.png).
+- IDL: [OpenAPI](docs/streaming/openapi.yaml),
+  [AsyncAPI](docs/streaming/notifications.asyncapi.yaml); контракты теоретических
+  вариантов доступны в инструкции.
+- [Helm-чарт](helm/blt-streaming).
+- [Postman-коллекция](postman/homework-8.postman_collection.json) и
+  [окружение](postman/homework-8.postman_environment.json): `{{baseUrl}}` = `http://arch.homework`.
+- [Результаты проверок](docs/results/streaming/README.md).
 
-![Схема взаимодействия сервисов](docs/authentication-architecture.png)
+![Архитектура](docs/streaming/architecture.png)
 
-## Локальный запуск
+## Запуск
 
-Из корня репозитория, PowerShell, Docker Desktop запущен:
-
-```powershell
-./scripts/setup-auth.ps1
-./scripts/test-auth.ps1 -BaseUrl http://127.0.0.1:8087
-```
-
-Первый скрипт создаёт отдельный kind-кластер `otus-hw7`, собирает и загружает
-образ `7.0.0`, устанавливает nginx-ingress в **`ingress-nginx`**, PostgreSQL и
-приложение в **`blt`**. Используется `.local/kubeconfig-auth`.
-Коллекция передаёт `Host: arch.homework`; изменять системный hosts для этого
-запуска не требуется. Newman выводит данные запросов и ответов, маскируя секреты.
-
-Команда установки приложения в подготовленный кластер с PostgreSQL:
+Из корня репозитория, PowerShell 7, Docker Desktop с Linux containers запущен:
 
 ```powershell
-helm upgrade --install blt-users-api ./helm/blt-users-api --namespace blt --create-namespace --wait --timeout 5m
+./scripts/setup-streaming.ps1
+./scripts/test-streaming.ps1 -BaseUrl http://127.0.0.1:8098
 ```
 
-Подготовка образа, БД, установка ingress и вариант из манифестов описаны
-в [инструкции](docs/authentication.md). HTTP используется для локального стенда;
-внешний доступ требует HTTPS.
+Скрипт создаёт kind-кластер `otus-hw8`, собирает и загружает четыре образа.
+Приложения, БД и Kafka устанавливаются в namespace **`blt`**,
+ingress controller — в **`ingress-nginx`**. Kubeconfig:
+`.local/kubeconfig-streaming`. Newman выводит запросы и ответы.
 
-Автотесты с временной PostgreSQL в Docker:
+Команда установки приложения в подготовленный кластер:
+
+```powershell
+helm upgrade --install blt-streaming ./helm/blt-streaming --namespace blt --create-namespace --wait --wait-for-jobs --timeout 10m
+```
+
+Автотесты с временными PostgreSQL в Docker:
 
 ```powershell
 dotnet test Blt.slnx
 ```
 
-Предыдущие работы: [ДЗ № 4](docs/homework-4.md), [ДЗ № 5](docs/homework-5.md),
-[ДЗ № 6](docs/homework-6.md). Их коллекции CRUD относятся к API до введения авторизации.
+Предыдущие работы: [ДЗ №4](docs/homework-4.md), [№5](docs/homework-5.md),
+[№6](docs/homework-6.md), [№7](docs/authentication.md).

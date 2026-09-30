@@ -1,0 +1,25 @@
+sequenceDiagram
+    participant C as Клиент
+    participant O as Orders
+    participant K as Kafka
+    participant B as Billing
+    participant N as Notifications
+    Note over C,N: Каждый сервис реагирует на факты; отдельного координатора процесса нет
+    C->>O: POST /orders {price}
+    O-->>C: 202 {id, status: processing}
+    O->>K: OrderCreated.v1 (outbox)
+    K->>B: OrderCreated.v1
+    alt Средств достаточно
+    B->>K: PaymentSucceeded.v1: списание + outbox
+    else Недостаточно средств
+    B->>K: PaymentDeclined.v1: отказ + outbox
+    end
+    K->>O: PaymentSucceeded.v1 / PaymentDeclined.v1
+    Note over C,N: Orders: inbox + paid/rejected + outbox в одной транзакции
+    O->>K: OrderCompleted.v1
+    K->>N: OrderCompleted.v1
+    Note over C,N: Notifications: письмо счастья / горя; commit offset после сохранения
+    C->>O: GET /orders/{id} (poll)
+    O-->>C: 200 paid / rejected
+    C->>N: GET /notifications?orderId=... (poll)
+    N-->>C: 200: сохранённое письмо
