@@ -33,8 +33,9 @@ public partial class Program
                 return Results.BadRequest(new { error = "Idempotency-Key must be a nonempty UUID." });
             try
             {
-                var (createdOrder, created) = await db.CreateSagaAsync(CurrentUser.Id(user), CurrentUser.Email(user), key, request, ct);
-                var order = await saga.RunAsync(createdOrder.Id, app.Lifetime.ApplicationStopping);
+                var (order, created) = await db.CreateSagaAsync(CurrentUser.Id(user), CurrentUser.Email(user), key, request, ct);
+                if (created) order = await saga.RunAsync(order.Id, app.Lifetime.ApplicationStopping);
+                context.Response.Headers["Idempotency-Replayed"] = created ? "false" : "true";
                 context.Response.Headers.Location = $"/orders/{order.Id}";
                 return Results.Json(order, statusCode: order.Status is "processing" or "compensating" ? 202 : created ? 201 : 200);
             }

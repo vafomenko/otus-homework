@@ -1,0 +1,1270 @@
+{
+  "info": {
+    "name": "ДЗ №10 — Идемпотентность и коммутативность",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Запустите коллекцию целиком в Runner. Два новых пользователя начинают с нулевого баланса. Суммы указаны в копейках. Два запроса на создание второго заказа отправляются одновременно."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://arch.homework",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{tokenA}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Пользователи и коммутативные пополнения",
+      "item": [
+        {
+          "name": "Регистрация A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{loginA}}\",\n  \"password\": \"{{password}}\",\n  \"firstName\": \"Иван\",\n  \"lastName\": \"Заказов\",\n  \"email\": \"{{loginA}}@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const guid = () => pm.variables.replaceIn('{{$guid}}');",
+                  "const run = guid();",
+                  "pm.collectionVariables.set('loginA', 'hw10_a_' + run);",
+                  "pm.collectionVariables.set('loginB', 'hw10_b_' + run);",
+                  "pm.collectionVariables.set('password', 'Hw10!' + run);",
+                  "['deposit1', 'deposit2', 'orderKey', 'declinedKey'].forEach(key => pm.collectionVariables.set(key, guid()));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('userA', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Вход A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{loginA}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const session = pm.response.json();",
+                  "pm.test('Сессия принадлежит пользователю A', () => {",
+                  "  pm.expect(session.userId).to.eql(pm.collectionVariables.get('userA'));",
+                  "  pm.expect(session.accessToken).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set('tokenA', session.accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Регистрация B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{loginB}}\",\n  \"password\": \"{{password}}\",\n  \"firstName\": \"Иван\",\n  \"lastName\": \"Заказов\",\n  \"email\": \"{{loginB}}@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('userB', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Вход B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{loginB}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const session = pm.response.json();",
+                  "pm.test('Сессия принадлежит пользователю B', () => {",
+                  "  pm.expect(session.userId).to.eql(pm.collectionVariables.get('userB'));",
+                  "  pm.expect(session.accessToken).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set('tokenB', session.accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A — пополнение 3000",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/billing/deposits",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"operationId\": \"{{deposit1}}\",\n  \"amount\": 3000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const receipt = pm.response.json();",
+                  "pm.test('Квитанция подтверждает пополнение', () => {",
+                  "  pm.expect(receipt.status).to.eql('succeeded');",
+                  "  pm.expect(receipt.operationId).to.eql(pm.collectionVariables.get('deposit1'));",
+                  "  pm.expect(receipt.amount).to.eql(3000);",
+                  "  pm.expect(receipt.userId).to.eql(pm.collectionVariables.get('userA'));",
+                  "});",
+                  "pm.test('Баланс в квитанции равен 3000', () => pm.expect(receipt.balance).to.eql(3000));",
+                  "pm.collectionVariables.set('firstReceiptA', JSON.stringify(receipt));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A — пополнение 7000",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/billing/deposits",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"operationId\": \"{{deposit2}}\",\n  \"amount\": 7000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const receipt = pm.response.json();",
+                  "pm.test('Квитанция подтверждает пополнение', () => {",
+                  "  pm.expect(receipt.status).to.eql('succeeded');",
+                  "  pm.expect(receipt.operationId).to.eql(pm.collectionVariables.get('deposit2'));",
+                  "  pm.expect(receipt.amount).to.eql(7000);",
+                  "  pm.expect(receipt.userId).to.eql(pm.collectionVariables.get('userA'));",
+                  "});",
+                  "pm.test('Баланс в квитанции равен 10000', () => pm.expect(receipt.balance).to.eql(10000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A — повтор пополнения 3000",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/billing/deposits",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"operationId\": \"{{deposit1}}\",\n  \"amount\": 3000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const receipt = pm.response.json();",
+                  "pm.test('Квитанция подтверждает пополнение', () => {",
+                  "  pm.expect(receipt.status).to.eql('succeeded');",
+                  "  pm.expect(receipt.operationId).to.eql(pm.collectionVariables.get('deposit1'));",
+                  "  pm.expect(receipt.amount).to.eql(3000);",
+                  "  pm.expect(receipt.userId).to.eql(pm.collectionVariables.get('userA'));",
+                  "});",
+                  "pm.test('Повтор вернул исходную квитанцию', () =>",
+                  "  pm.expect(receipt).to.deep.equal(JSON.parse(pm.collectionVariables.get('firstReceiptA'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A — итоговый баланс",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/billing/account"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const balance = pm.response.json().balance;",
+                  "pm.test('Баланс равен сумме двух разных пополнений', () => pm.expect(balance).to.eql(10000));",
+                  "pm.collectionVariables.set('forwardBalance', balance);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B — пополнение 7000",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/billing/deposits",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"operationId\": \"{{deposit2}}\",\n  \"amount\": 7000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const receipt = pm.response.json();",
+                  "pm.test('Квитанция подтверждает пополнение', () => {",
+                  "  pm.expect(receipt.status).to.eql('succeeded');",
+                  "  pm.expect(receipt.operationId).to.eql(pm.collectionVariables.get('deposit2'));",
+                  "  pm.expect(receipt.amount).to.eql(7000);",
+                  "  pm.expect(receipt.userId).to.eql(pm.collectionVariables.get('userB'));",
+                  "});",
+                  "pm.test('Баланс в квитанции равен 7000', () => pm.expect(receipt.balance).to.eql(7000));",
+                  "pm.collectionVariables.set('firstReceiptB', JSON.stringify(receipt));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B — пополнение 3000",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/billing/deposits",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"operationId\": \"{{deposit1}}\",\n  \"amount\": 3000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const receipt = pm.response.json();",
+                  "pm.test('Квитанция подтверждает пополнение', () => {",
+                  "  pm.expect(receipt.status).to.eql('succeeded');",
+                  "  pm.expect(receipt.operationId).to.eql(pm.collectionVariables.get('deposit1'));",
+                  "  pm.expect(receipt.amount).to.eql(3000);",
+                  "  pm.expect(receipt.userId).to.eql(pm.collectionVariables.get('userB'));",
+                  "});",
+                  "pm.test('Баланс в квитанции равен 10000', () => pm.expect(receipt.balance).to.eql(10000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B — повтор пополнения 7000",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/billing/deposits",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"operationId\": \"{{deposit2}}\",\n  \"amount\": 7000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const receipt = pm.response.json();",
+                  "pm.test('Квитанция подтверждает пополнение', () => {",
+                  "  pm.expect(receipt.status).to.eql('succeeded');",
+                  "  pm.expect(receipt.operationId).to.eql(pm.collectionVariables.get('deposit2'));",
+                  "  pm.expect(receipt.amount).to.eql(7000);",
+                  "  pm.expect(receipt.userId).to.eql(pm.collectionVariables.get('userB'));",
+                  "});",
+                  "pm.test('Повтор вернул исходную квитанцию', () =>",
+                  "  pm.expect(receipt).to.deep.equal(JSON.parse(pm.collectionVariables.get('firstReceiptB'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B — итоговый баланс",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/billing/account",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const balance = pm.response.json().balance;",
+                  "pm.test('Баланс равен сумме двух разных пополнений', () => pm.expect(balance).to.eql(10000));",
+                  "pm.test('Перестановка пополнений сохранила итог', () =>",
+                  "  pm.expect(balance).to.eql(pm.collectionVariables.get('forwardBalance')));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Создание заказа и повторные HTTP-запросы",
+      "item": [
+        {
+          "name": "Запомнить остаток SKU-1",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/warehouse/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const product = pm.response.json().find(row => row.sku === 'SKU-1');",
+                  "pm.test('На складе есть товар для заказа', () => pm.expect(product.available).to.be.at.least(2));",
+                  "pm.collectionVariables.set('stockBefore', product.available);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Выбрать свободный слот курьера",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/delivery/slots"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const slots = pm.response.json().filter(slot => slot.available === 1);",
+                  "pm.test('Есть свободный курьер', () => pm.expect(slots).not.to.be.empty);",
+                  "if (slots.length) {",
+                  "  const slot = slots[Math.floor(Math.random() * slots.length)];",
+                  "  pm.collectionVariables.set('slotId', slot.id);",
+                  "  pm.collectionVariables.set('courierId', slot.courierId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Создать заказ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{orderKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 2500,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const order = pm.response.json();",
+                  "pm.test('Первый запрос создал ресурс', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([201, 202]);",
+                  "  pm.expect(pm.response.headers.get('Idempotency-Replayed')).to.eql('false');",
+                  "  pm.expect(order.id).to.match(/^[0-9a-f-]{36}$/i);",
+                  "  pm.expect(order.userId).to.eql(pm.collectionVariables.get('userA'));",
+                  "  pm.expect(pm.response.headers.get('Location')).to.eql('/orders/' + order.id);",
+                  "});",
+                  "pm.collectionVariables.set('paidId', order.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Дождаться оплаты заказа",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{paidId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const order = pm.response.json();",
+                  "if (['processing', 'compensating'].includes(order.status)) {",
+                  "  const counter = 'attempts_' + pm.info.requestName;",
+                  "  const attempt = Number(pm.variables.get(counter) || 0) + 1;",
+                  "  pm.variables.set(counter, attempt);",
+                  "  pm.test('Ожидание укладывается в 80 попыток', () => pm.expect(attempt).to.be.below(80));",
+                  "  if (attempt < 80) setTimeout(() => pm.execution.setNextRequest(pm.info.requestName), 400);",
+                  "} else {",
+                  "  pm.test('Заказ завершён и имеет ожидаемый результат', () => {",
+                  "    pm.expect(order.id).to.eql(pm.collectionVariables.get('paidId'));",
+                  "    pm.expect(order.step).to.eql('done');",
+                  "    pm.expect(order.status).to.eql('paid');",
+                  "    pm.expect(order.reason).to.eql(null);",
+                  "  });",
+                  "  pm.collectionVariables.set('paidSnapshot', JSON.stringify(order));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Повторить заказ с переставленными полями JSON",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{orderKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slotId\": \"{{slotId}}\",\n  \"quantity\": 2,\n  \"sku\": \"SKU-1\",\n  \"price\": 2500\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Повтор вернул ту же ссылку и тот же завершённый заказ', () => {",
+                  "  pm.expect(pm.response.headers.get('Idempotency-Replayed')).to.eql('true');",
+                  "  pm.expect(pm.response.headers.get('Location')).to.eql('/orders/' + pm.collectionVariables.get('paidId'));",
+                  "  pm.expect(pm.response.json()).to.deep.equal(JSON.parse(pm.collectionVariables.get('paidSnapshot')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Повторить ключ с другим количеством",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{orderKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 2500,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 3,\n  \"slotId\": \"{{slotId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Причина конфликта указывает на ключ', () => pm.expect(pm.response.json().error).to.include('Idempotency-Key'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Отправить заказ без ключа",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 2500,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Отправить заказ с некорректным ключом",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "invalid"
+              }
+            ],
+            "url": "{{baseUrl}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 2500,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Проверить однократный резерв товара",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/warehouse/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const product = pm.response.json().find(row => row.sku === 'SKU-1');",
+                  "pm.test('Остаток уменьшился ровно на две единицы', () =>",
+                  "  pm.expect(product.available).to.eql(pm.collectionVariables.get('stockBefore') - 2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Проверить резерв курьера",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/delivery/reservations/{{paidId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const reservation = pm.response.json();",
+                  "pm.test('За заказом закреплён выбранный курьер', () => {",
+                  "  pm.expect(reservation.orderId).to.eql(pm.collectionVariables.get('paidId'));",
+                  "  pm.expect(reservation.resourceId).to.eql(pm.collectionVariables.get('slotId'));",
+                  "  pm.expect(reservation.courierId).to.eql(pm.collectionVariables.get('courierId'));",
+                  "  pm.expect(reservation.status).to.eql('reserved');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Конкурентный повтор, Kafka и область действия ключа",
+      "item": [
+        {
+          "name": "Проверить баланс и отправить два одновременных POST /orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/billing/account"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('За первый заказ списано ровно 2500', () => pm.expect(pm.response.json().balance).to.eql(7500));",
+                  "const variables = pm.collectionVariables;",
+                  "const orderRequest = {",
+                  "  method: 'POST',",
+                  "  url: pm.variables.replaceIn('{{baseUrl}}/orders'),",
+                  "  header: {",
+                  "    'Host': 'arch.homework',",
+                  "    'Content-Type': 'application/json',",
+                  "    'Authorization': 'Bearer ' + variables.get('tokenA'),",
+                  "    'Idempotency-Key': variables.get('declinedKey')",
+                  "  },",
+                  "  body: { mode: 'raw', raw: JSON.stringify({ price: 20000, sku: 'SKU-1', quantity: 2, slotId: variables.get('slotId') }) }",
+                  "};",
+                  "const send = () => new Promise((resolve, reject) =>",
+                  "  pm.sendRequest(orderRequest, (error, response) => error ? reject(error) : resolve(response)));",
+                  "pm.test('Два одновременных POST /orders создали один ресурс', done => {",
+                  "  Promise.all([send(), send()]).then(responses => {",
+                  "    const id = responses[0].json().id;",
+                  "    pm.expect(id).to.be.a('string').and.not.equal(variables.get('paidId'));",
+                  "    const flags = responses.map(response => response.headers.get('Idempotency-Replayed'));",
+                  "    pm.expect(flags.sort()).to.deep.equal(['false', 'true']);",
+                  "    for (const response of responses) {",
+                  "      const replayed = response.headers.get('Idempotency-Replayed') === 'true';",
+                  "      pm.expect(response.code).to.be.oneOf(replayed ? [200, 202] : [201, 202]);",
+                  "      pm.expect(response.headers.get('Location')).to.eql('/orders/' + id);",
+                  "      pm.expect(response.json().id).to.eql(id);",
+                  "    }",
+                  "    variables.set('declinedId', id);",
+                  "  }).then(() => done(), done);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Дождаться отказа по второму заказу",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{declinedId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const order = pm.response.json();",
+                  "if (['processing', 'compensating'].includes(order.status)) {",
+                  "  const counter = 'attempts_' + pm.info.requestName;",
+                  "  const attempt = Number(pm.variables.get(counter) || 0) + 1;",
+                  "  pm.variables.set(counter, attempt);",
+                  "  pm.test('Ожидание укладывается в 80 попыток', () => pm.expect(attempt).to.be.below(80));",
+                  "  if (attempt < 80) setTimeout(() => pm.execution.setNextRequest(pm.info.requestName), 400);",
+                  "} else {",
+                  "  pm.test('Заказ завершён и имеет ожидаемый результат', () => {",
+                  "    pm.expect(order.id).to.eql(pm.collectionVariables.get('declinedId'));",
+                  "    pm.expect(order.step).to.eql('done');",
+                  "    pm.expect(order.status).to.eql('rejected');",
+                  "    pm.expect(order.reason).to.eql('insufficient_funds');",
+                  "  });",
+                  "  pm.collectionVariables.set('declinedSnapshot', JSON.stringify(order));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Повторить отклонённый заказ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{declinedKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 20000,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Повтор вернул ту же ссылку и тот же завершённый заказ', () => {",
+                  "  pm.expect(pm.response.headers.get('Idempotency-Replayed')).to.eql('true');",
+                  "  pm.expect(pm.response.headers.get('Location')).to.eql('/orders/' + pm.collectionVariables.get('declinedId'));",
+                  "  pm.expect(pm.response.json()).to.deep.equal(JSON.parse(pm.collectionVariables.get('declinedSnapshot')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Проверить баланс после отказа",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/billing/account"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Отклонённый заказ и его повторы сохранили баланс', () => pm.expect(pm.response.json().balance).to.eql(7500));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Дождаться двух уведомлений из Kafka",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/notifications"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const letters = pm.response.json();",
+                  "if (letters.length < 2) {",
+                  "  const counter = 'attempts_' + pm.info.requestName;",
+                  "  const attempt = Number(pm.variables.get(counter) || 0) + 1;",
+                  "  pm.variables.set(counter, attempt);",
+                  "  pm.test('Ожидание укладывается в 80 попыток', () => pm.expect(attempt).to.be.below(80));",
+                  "  if (attempt < 80) setTimeout(() => pm.execution.setNextRequest(pm.info.requestName), 400);",
+                  "} else {",
+                  "  const expected = [[pm.collectionVariables.get('paidId'), 'paid'], [pm.collectionVariables.get('declinedId'), 'rejected']];",
+                  "  pm.test('Каждому заказу соответствует одно итоговое письмо', () => {",
+                  "    pm.expect(letters.map(letter => [letter.orderId, letter.outcome])).to.deep.equal(expected);",
+                  "    for (const letter of letters) {",
+                  "      pm.expect(letter.id).to.eql(letter.eventId);",
+                  "      pm.expect(letter.userId).to.eql(pm.collectionVariables.get('userA'));",
+                  "    }",
+                  "  });",
+                  "  pm.environment.set('paidOrderId', expected[0][0]);",
+                  "  pm.environment.set('declinedOrderId', expected[1][0]);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Создать заказ с тем же ключом от имени B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{orderKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 2500,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const order = pm.response.json();",
+                  "pm.test('Первый запрос создал ресурс', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([201, 202]);",
+                  "  pm.expect(pm.response.headers.get('Idempotency-Replayed')).to.eql('false');",
+                  "  pm.expect(order.id).to.match(/^[0-9a-f-]{36}$/i);",
+                  "  pm.expect(order.userId).to.eql(pm.collectionVariables.get('userB'));",
+                  "  pm.expect(pm.response.headers.get('Location')).to.eql('/orders/' + order.id);",
+                  "  pm.expect(order.id).not.to.eql(pm.collectionVariables.get('paidId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Проверить доступ B к заказу A",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Host",
+                "value": "arch.homework"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{paidId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 image:
   registry: vafomenko
-  tag: "9.0.0"
+  tag: "10.0.0"
   pullPolicy: IfNotPresent
 services:
   - name: users

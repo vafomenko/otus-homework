@@ -15,10 +15,10 @@ public sealed class OrderRepository(Database db)
     public async Task<(Order Order, bool Created)> CreateSagaAsync(long userId, string email, Guid key, OrderRequest request, CancellationToken ct = default)
     {
         await using var connection = await db.OpenAsync(ct);
-        await using var command = new NpgsqlCommand("""
+        await using var command = new NpgsqlCommand($"""
             INSERT INTO orders(id, user_id, price, status, sku, quantity, slot_id, email, idempotency_key, step)
             VALUES (@id, @user, @price, 'processing', @sku, @quantity, @slot, @email, @key, 'payment')
-            ON CONFLICT (user_id, idempotency_key) DO NOTHING RETURNING id
+            ON CONFLICT (user_id, idempotency_key) DO NOTHING RETURNING {Columns}
             """, connection);
         command.Parameters.AddWithValue("id", Guid.NewGuid());
         command.Parameters.AddWithValue("user", userId);
@@ -28,14 +28,18 @@ public sealed class OrderRepository(Database db)
         command.Parameters.AddWithValue("slot", request.SlotId);
         command.Parameters.AddWithValue("email", email);
         command.Parameters.AddWithValue("key", key);
-        var created = await command.ExecuteScalarAsync(ct) is Guid;
+        await using (var inserted = await command.ExecuteReaderAsync(ct))
+        {
+            if (await inserted.ReadAsync(ct)) return (Read(inserted), true);
+        }
+        // A new statement sees the committed row even if a concurrent insert won the key.
         command.CommandText = $"SELECT {Columns} FROM orders WHERE user_id=@user AND idempotency_key=@key";
         await using var reader = await command.ExecuteReaderAsync(ct);
         if (!await reader.ReadAsync(ct)) throw new InvalidOperationException("Order insert disappeared.");
         var order = Read(reader);
         if (order.Price != request.Price || order.Sku != request.Sku || order.Quantity != request.Quantity || order.SlotId != request.SlotId)
             throw new OrderConflictException();
-        return (order, created);
+        return (order, false);
     }
 
     public async Task<SagaOrder?> GetSagaAsync(Guid id, CancellationToken ct = default)

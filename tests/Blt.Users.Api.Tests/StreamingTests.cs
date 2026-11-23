@@ -107,6 +107,32 @@ public sealed class StreamingTests(PostgresFixture postgres) : IClassFixture<Pos
     }
 
     [Fact]
+    public async Task Notification_list_is_identical_after_opposite_delivery_orders_and_duplicates()
+    {
+        const long user = 810;
+        var repository = new NotificationRepository(_db);
+        var order = new Order(Guid.NewGuid(), user, 2500, "paid", null, DateTimeOffset.UtcNow);
+        var time = new DateTimeOffset(2030, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var a = OrderEvent.Create(order, "queue@example.com") with { Time = time };
+        var b = OrderEvent.Create(order with { Id = Guid.NewGuid(), Status = "rejected", Reason = "insufficient_funds" },
+            "queue@example.com") with { Time = time.AddMinutes(1) };
+
+        foreach (var message in new[] { a, b, a }) await repository.SaveOrderAsync(message);
+        var forward = await repository.ListAsync(user);
+        Assert.Collection(forward,
+            first => Assert.Equal((a.Id, a.Data.OrderId, a.Time, "paid"), (first.Id, first.OrderId!.Value, first.CreatedAt, first.Outcome)),
+            second => Assert.Equal((b.Id, b.Data.OrderId, b.Time, "rejected"), (second.Id, second.OrderId!.Value, second.CreatedAt, second.Outcome)));
+
+        // Start the reverse sequence with an empty inbox in the disposable test database.
+        await using var connection = await _db.OpenAsync();
+        await using var reset = new NpgsqlCommand("DELETE FROM notifications WHERE user_id=@user", connection);
+        reset.Parameters.AddWithValue("user", user);
+        await reset.ExecuteNonQueryAsync();
+        foreach (var message in new[] { b, a, b }) await repository.SaveOrderAsync(message);
+        Assert.Equal(forward, await repository.ListAsync(user));
+    }
+
+    [Fact]
     public async Task Order_completion_and_outbox_are_atomic()
     {
         var repository = new OrderRepository(_db);

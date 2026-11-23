@@ -1,44 +1,75 @@
-# Домашнее задание №9 — Распределённые транзакции
+# ДЗ №10 — Идемпотентность и коммутативность API в HTTP и очередях
 
-Сервисы интернет-магазина на .NET 10, PostgreSQL и Kafka.
-Создание заказа выполняется через **оркестрируемую Saga**:
-оплата в Billing → резерв товара в Warehouse → резерв конкретного
-курьера на временной слот в Delivery. При отказе выполняются компенсации.
+Если клиент отправил `POST /orders` и потерял ответ, он может повторить запрос с тем же `Idempotency-Key`. Оба вызова указывают на один заказ. Для оплаченного заказа Billing спишет деньги один раз, Warehouse и Delivery зафиксируют по одному резерву, а Notifications сохранит одно итоговое письмо.
 
-Состояние и повторы сохраняются в БД; worker возобновляет
-сагу после сбоя. [Сценарии перезапуска и действия при зависшем заказе](docs/saga/recovery.md).
+Работа использует микросервисы на .NET 10, PostgreSQL и Kafka из [ДЗ №9](docs/saga/README.md).
 
-- [Паттерн, архитектура, установка и сценарии проверки](docs/saga/README.md).
-- [Helm-чарт](helm/blt-saga).
-- [Postman-коллекция](postman/homework-9.postman_collection.json) и
-  [окружение](postman/homework-9.postman_environment.json).
-  Initial `{{baseUrl}}` в обоих файлах — **`http://arch.homework`**.
-- [Результаты проверок](docs/results/saga/README.md).
+## Идемпотентное создание заказа
 
-Локальный стенд, PowerShell 7, Docker Desktop с Linux containers:
+Пример запроса от авторизованного пользователя. Слот для заказа можно выбрать через `GET /delivery/slots`.
 
-```powershell
-./scripts/setup-saga.ps1
-./scripts/test-saga.ps1 -BaseUrl http://127.0.0.1:8099
+```http
+POST /orders HTTP/1.1
+Host: arch.homework
+Authorization: Bearer <accessToken>
+Idempotency-Key: 631781eb-f6d5-42d8-b574-a5c06f4d74b3
+Content-Type: application/json
+
+{"price":2500,"sku":"SKU-1","quantity":2,"slotId":"slot-0001"}
 ```
 
-Скрипт собирает шесть образов и создаёт отдельный kind-кластер **`otus-hw9`**.
-API, шесть отдельных PostgreSQL и Kafka устанавливаются в namespace **`blt`**;
-ingress controller — в **`ingress-nginx`**. Kubeconfig: `.local/kubeconfig-saga`.
-Коллекция передаёт `Host: arch.homework` при локальном переопределении URL.
+Использован паттерн **Idempotent Receiver**. Клиент создаёт UUID для одного заказа и сохраняет его для всех повторов. Orders одной командой `INSERT … ON CONFLICT DO NOTHING` сохраняет ключ вместе с заказом. Уникальный индекс PostgreSQL на `(user_id, idempotency_key)` выбирает одного создателя даже при одновременных запросах к разным репликам. Ключ действует, пока хранится заказ. Другой покупатель может использовать тот же UUID.
 
-Команды установки в подготовленный кластер с ingress, StorageClass и образами:
+Создатель запускает сагу. При повторе Orders читает существующую запись и сравнивает значения `price`, `sku`, `quantity` и `slotId`. Форматирование и порядок полей JSON на сравнение не влияют. Если процесс остановился после записи заказа, незавершённую сагу подхватит фоновый обработчик. [HTTP-обработчик](src/Blt.Orders.Api/Program.cs) · [запись и поиск заказа](src/Blt.Orders.Api/OrderRepository.cs) · [уникальный индекс](src/Blt.Orders.Api/Migrations/002_saga.sql).
+
+| Запрос | Ответ |
+|---|---|
+| Первое обращение | `201 Created` для завершённой саги или `202 Accepted` в процессе. Заголовок `Idempotency-Replayed: false` |
+| Повтор с теми же параметрами | `200 OK` с завершённым заказом или `202 Accepted` с его текущим состоянием. Заголовок `Idempotency-Replayed: true` |
+| Тот же ключ с другими допустимыми параметрами | `409 Conflict` |
+| Ключ пропущен, имеет неверный формат или равен нулевому UUID | `400 Bad Request` |
+
+Первый запрос и повтор возвращают один и тот же `Location: /orders/{id}`. По этой ссылке можно дождаться `paid` или `rejected`. Бизнес-отказ, например из-за недостатка денег, тоже закрепляется за ключом.
+
+## Коммутативность и повторная доставка
+
+**HTTP.** Два пополнения `POST /billing/deposits` с разными `operationId` коммутируют по итоговому балансу, если их сумма укладывается в лимит счёта. В коллекции один покупатель пополняет счёт на 3000 и 7000 копеек, второй — на 7000 и 3000. После повтора первого пополнения у каждого по 10 000 копеек. При этом промежуточный баланс в квитанции зависит от очередности. У заказов на один свободный слот очередность тоже важна — слот получит один покупатель. [Операции Billing](src/Blt.Billing.Api/BillingRepository.cs).
+
+**Kafka.** Orders записывает финальное состояние и событие в одной транзакции (**Transactional Outbox**). Публикация и доставка допускают повторы. В Notifications строка письма служит записью **Inbox**. Ограничения `UNIQUE(event_id)` и `UNIQUE(order_id)` защищают от второго письма, а consumer подтверждает offset после записи в PostgreSQL. Для событий разных заказов итоговый список коммутативен. Идентификатор и время письма берутся из события, а `GET /notifications` сортирует письма по времени события и идентификатору. [Outbox](src/Blt.Orders.Api/OutboxPublisher.cs) · [обработчик Kafka](src/Blt.Notifications.Api/OrderConsumer.cs) · [запись уведомлений](src/Blt.Notifications.Api/NotificationRepository.cs).
+
+## Установка
+
+Для локального стенда нужны PowerShell 7, Docker Desktop в режиме Linux-контейнеров и kubectl. Из корня репозитория выполните
 
 ```powershell
+./scripts/setup-saga.ps1 -Homework 10
+```
+
+Скрипт собирает шесть образов с тегом `10.0.0`, загружает их в отдельный kind-кластер `otus-hw10` и устанавливает Helm-релиз `blt-saga`. Сервисы, PostgreSQL и Kafka работают в namespace **`blt`**, ingress-контроллер — в `ingress-nginx`. Kubeconfig находится в `.local/kubeconfig-idempotency`. Локальная точка входа — `http://127.0.0.1:8100` с заголовком `Host: arch.homework`.
+
+Для подготовленного кластера нужны ingress-контроллер класса `nginx`, StorageClass по умолчанию и доступные узлам образы приложения версии `10.0.0`. Создание namespace и установка из [Helm-чарта](helm/blt-saga) выполняются командами
+
+```sh
 kubectl create namespace blt --dry-run=client -o yaml | kubectl apply -f -
-helm upgrade --install blt-saga ./helm/blt-saga --namespace blt --wait --wait-for-jobs --timeout 10m
+helm upgrade --install blt-saga ./helm/blt-saga --namespace blt --set-string image.tag=10.0.0 --wait --wait-for-jobs --timeout 10m
 ```
 
-Для созданного скриптом кластера укажите `--kubeconfig .local/kubeconfig-saga`
-в командах kubectl и Helm. Полная подготовка описана в инструкции.
+При использовании своего реестра передайте Helm параметр `--set-string image.registry=<реестр/проект>`. Для обращения по `http://arch.homework` направьте домен на адрес ingress.
 
-Автотесты используют временные PostgreSQL-контейнеры:
+## Проверка
+
+Импортируйте в Postman [коллекцию ДЗ №10](postman/homework-10.postman_collection.json) и [окружение](postman/homework-10.postman_environment.json), выберите окружение и запустите коллекцию целиком через Runner. **Initial-значение `{{baseUrl}}` в обоих файлах — `http://arch.homework`.** На локальном стенде можно задать текущее значение `http://127.0.0.1:8100`. Коллекция сама передаёт `Host: arch.homework` и создаёт новых пользователей для каждого запуска.
+
+Коллекция проверяет перестановку пополнений, одновременную отправку двух `POST /orders`, повтор оплаченного и отклонённого заказов, конфликт ключа, баланс, резервы и письма из Kafka. Один успешный прогон занимает один курьерский слот и две единицы `SKU-1`.
+
+Полная проверка локального стенда запускает эту же коллекцию через Newman, затем берёт два настоящих события из outbox и повторно публикует их в Kafka в порядке `B, A, B, A`. Скрипт дожидается подтверждения всех четырёх записей группой Notifications и сравнивает сохранённые письма до и после доставки. Для запуска нужны Node.js и npm.
 
 ```powershell
+./scripts/test-idempotency.ps1 -BaseUrl http://127.0.0.1:8100
+```
+
+Интеграционные тесты .NET используют временные PostgreSQL-контейнеры. Среди них есть проверка из пустого состояния — последовательности `A, B, A` и `B, A, B` должны дать одинаковый список писем, включая идентификаторы и время.
+
+```sh
 dotnet test Blt.slnx
 ```

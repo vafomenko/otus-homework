@@ -109,7 +109,7 @@ StorageClass и доступными узлам образами:
 
 ```powershell
 kubectl create namespace blt --dry-run=client -o yaml | kubectl apply -f -
-helm upgrade --install blt-saga ./helm/blt-saga --namespace blt --wait --wait-for-jobs --timeout 10m
+helm upgrade --install blt-saga ./helm/blt-saga --namespace blt --set-string image.tag=9.0.0 --wait --wait-for-jobs --timeout 10m
 ```
 
 Для локального кластера добавьте `--kubeconfig .local/kubeconfig-saga`.

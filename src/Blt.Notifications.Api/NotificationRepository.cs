@@ -16,11 +16,11 @@ public sealed class NotificationRepository(Database db)
             message.Id == Guid.Empty || data.OrderId == Guid.Empty || data.UserId <= 0)
             throw new InvalidDataException("Unsupported order event.");
         var happy = data.Status == "paid";
-        return SaveAsync(new Notification(Guid.NewGuid(), message.Id, data.OrderId, data.UserId, data.Email,
+        return SaveAsync(new Notification(message.Id, message.Id, data.OrderId, data.UserId, data.Email,
             happy ? "Письмо счастья" : "Письмо горя",
             happy ? $"Заказ {data.OrderId} оформлен. Оплата {data.Price} коп. прошла успешно."
                   : $"Заказ {data.OrderId} не оформлен: {data.Reason}. Оплата и резервы отменены.",
-            data.Status, DateTimeOffset.UtcNow), ct);
+            data.Status, message.Time.ToUniversalTime()), ct);
     }
 
     public async Task SaveAsync(Notification message, CancellationToken ct = default)
