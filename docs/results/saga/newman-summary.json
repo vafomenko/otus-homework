@@ -1,0 +1,676 @@
+{
+  "initialBaseUrl": "http://arch.homework",
+  "runtimeBaseUrl": "http://127.0.0.1:8099",
+  "hostHeader": "arch.homework",
+  "stats": {
+    "requests": {
+      "total": 61,
+      "pending": 0,
+      "failed": 0
+    },
+    "assertions": {
+      "total": 155,
+      "pending": 0,
+      "failed": 0
+    }
+  },
+  "failures": [],
+  "executions": [
+    {
+      "name": "01 Register user",
+      "method": "POST",
+      "httpStatus": 201,
+      "assertions": 1,
+      "businessResult": {
+        "id": 8
+      }
+    },
+    {
+      "name": "02 Login",
+      "method": "POST",
+      "httpStatus": 200,
+      "assertions": 1,
+      "businessResult": {
+        "userId": 8
+      }
+    },
+    {
+      "name": "03 Account starts at zero",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 2,
+      "businessResult": {
+        "userId": 8,
+        "balance": 0,
+        "currency": "RUB"
+      }
+    },
+    {
+      "name": "04 Read stock baseline",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 2
+    },
+    {
+      "name": "05 Select a free concrete courier and time slot",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3
+    },
+    {
+      "name": "06 Order fails in Billing",
+      "method": "POST",
+      "httpStatus": 201,
+      "assertions": 2,
+      "businessResult": {
+        "id": "175e0dd1-1b44-4839-9056-9c5b841cc38f",
+        "userId": 8,
+        "price": 3000,
+        "status": "rejected",
+        "reason": "insufficient_funds",
+        "sku": "SKU-1",
+        "quantity": 2,
+        "slotId": "slot-0002",
+        "courierId": null,
+        "step": "done"
+      }
+    },
+    {
+      "name": "07 Wait for Billing rejection",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 4,
+      "businessResult": {
+        "id": "175e0dd1-1b44-4839-9056-9c5b841cc38f",
+        "userId": 8,
+        "price": 3000,
+        "status": "rejected",
+        "reason": "insufficient_funds",
+        "sku": "SKU-1",
+        "quantity": 2,
+        "slotId": "slot-0002",
+        "courierId": null,
+        "step": "done"
+      }
+    },
+    {
+      "name": "08 Failed payment leaves balance unchanged",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 2,
+      "businessResult": {
+        "userId": 8,
+        "balance": 0,
+        "currency": "RUB"
+      }
+    },
+    {
+      "name": "09 Failed payment leaves stock unchanged",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3
+    },
+    {
+      "name": "10 No stock reservation after payment failure",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 5,
+      "businessResult": {
+        "orderId": "175e0dd1-1b44-4839-9056-9c5b841cc38f",
+        "userId": 8,
+        "resourceId": "SKU-1",
+        "quantity": 2,
+        "status": "released",
+        "reason": "saga_compensated",
+        "courierId": null
+      }
+    },
+    {
+      "name": "11 No courier reservation after payment failure",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 5,
+      "businessResult": {
+        "orderId": "175e0dd1-1b44-4839-9056-9c5b841cc38f",
+        "userId": 8,
+        "resourceId": "slot-0002",
+        "quantity": 1,
+        "status": "released",
+        "reason": "saga_compensated",
+        "courierId": null
+      }
+    },
+    {
+      "name": "12 Declined payment is fenced",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3,
+      "businessResult": {
+        "orderId": "175e0dd1-1b44-4839-9056-9c5b841cc38f",
+        "amount": 3000,
+        "status": "cancelled",
+        "refundedAmount": 0
+      }
+    },
+    {
+      "name": "13 Deposit 10000 kopecks",
+      "method": "POST",
+      "httpStatus": 200,
+      "assertions": 2,
+      "businessResult": {
+        "userId": 8,
+        "amount": 10000,
+        "status": "succeeded",
+        "balance": 10000,
+        "reason": null
+      }
+    },
+    {
+      "name": "14 Successful order",
+      "method": "POST",
+      "httpStatus": 201,
+      "assertions": 2,
+      "businessResult": {
+        "id": "e67a3a05-4c0b-4db3-b304-cc25ec61c262",
+        "userId": 8,
+        "price": 3000,
+        "status": "paid",
+        "reason": null,
+        "sku": "SKU-1",
+        "quantity": 2,
+        "slotId": "slot-0002",
+        "courierId": "courier-2",
+        "step": "done"
+      }
+    },
+    {
+      "name": "15 Wait for successful order",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 5,
+      "businessResult": {
+        "id": "e67a3a05-4c0b-4db3-b304-cc25ec61c262",
+        "userId": 8,
+        "price": 3000,
+        "status": "paid",
+        "reason": null,
+        "sku": "SKU-1",
+        "quantity": 2,
+        "slotId": "slot-0002",
+        "courierId": "courier-2",
+        "step": "done"
+      }
+    },
+    {
+      "name": "16 Successful order costs 3000",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 2,
+      "businessResult": {
+        "userId": 8,
+        "balance": 7000,
+        "currency": "RUB"
+      }
+    },
+    {
+      "name": "17 Two concrete products reserved",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3
+    },
+    {
+      "name": "18 Inspect successful stock reservation",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 5,
+      "businessResult": {
+        "orderId": "e67a3a05-4c0b-4db3-b304-cc25ec61c262",
+        "userId": 8,
+        "resourceId": "SKU-1",
+        "quantity": 2,
+        "status": "reserved",
+        "reason": null,
+        "courierId": null
+      }
+    },
+    {
+      "name": "19 Inspect successful courier reservation",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 6,
+      "businessResult": {
+        "orderId": "e67a3a05-4c0b-4db3-b304-cc25ec61c262",
+        "userId": 8,
+        "resourceId": "slot-0002",
+        "quantity": 1,
+        "status": "reserved",
+        "reason": null,
+        "courierId": "courier-2"
+      }
+    },
+    {
+      "name": "20 Successful payment",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3,
+      "businessResult": {
+        "orderId": "e67a3a05-4c0b-4db3-b304-cc25ec61c262",
+        "amount": 3000,
+        "status": "succeeded",
+        "refundedAmount": 0
+      }
+    },
+    {
+      "name": "21 Courier slot is occupied",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 2
+    },
+    {
+      "name": "22 Repeat successful order with same key",
+      "method": "POST",
+      "httpStatus": 200,
+      "assertions": 2,
+      "businessResult": {
+        "id": "e67a3a05-4c0b-4db3-b304-cc25ec61c262",
+        "userId": 8,
+        "price": 3000,
+        "status": "paid",
+        "reason": null,
+        "sku": "SKU-1",
+        "quantity": 2,
+        "slotId": "slot-0002",
+        "courierId": "courier-2",
+        "step": "done"
+      }
+    },
+    {
+      "name": "23 No double charge",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 2,
+      "businessResult": {
+        "userId": 8,
+        "balance": 7000,
+        "currency": "RUB"
+      }
+    },
+    {
+      "name": "24 No duplicate stock reservation",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3
+    },
+    {
+      "name": "25 Same key with changed parameters is rejected",
+      "method": "POST",
+      "httpStatus": 409,
+      "assertions": 1,
+      "businessResult": {}
+    },
+    {
+      "name": "26 Order fails in Warehouse",
+      "method": "POST",
+      "httpStatus": 201,
+      "assertions": 2,
+      "businessResult": {
+        "id": "0f2fd3a0-6075-4270-b8a6-51bd620bebce",
+        "userId": 8,
+        "price": 2000,
+        "status": "rejected",
+        "reason": "out_of_stock",
+        "sku": "SKU-EMPTY",
+        "quantity": 1,
+        "slotId": "slot-0002",
+        "courierId": null,
+        "step": "done"
+      }
+    },
+    {
+      "name": "27 Wait for Warehouse rejection",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 4,
+      "businessResult": {
+        "id": "0f2fd3a0-6075-4270-b8a6-51bd620bebce",
+        "userId": 8,
+        "price": 2000,
+        "status": "rejected",
+        "reason": "out_of_stock",
+        "sku": "SKU-EMPTY",
+        "quantity": 1,
+        "slotId": "slot-0002",
+        "courierId": null,
+        "step": "done"
+      }
+    },
+    {
+      "name": "28 Warehouse failure refunds money",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 2,
+      "businessResult": {
+        "userId": 8,
+        "balance": 7000,
+        "currency": "RUB"
+      }
+    },
+    {
+      "name": "29 Warehouse failure leaves stock unchanged",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3
+    },
+    {
+      "name": "30 Warehouse failure refunds 2000 once",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3,
+      "businessResult": {
+        "orderId": "0f2fd3a0-6075-4270-b8a6-51bd620bebce",
+        "amount": 2000,
+        "status": "refunded",
+        "refundedAmount": 2000
+      }
+    },
+    {
+      "name": "31 Failed stock reservation released",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 5,
+      "businessResult": {
+        "orderId": "0f2fd3a0-6075-4270-b8a6-51bd620bebce",
+        "userId": 8,
+        "resourceId": "SKU-EMPTY",
+        "quantity": 1,
+        "status": "released",
+        "reason": "saga_compensated",
+        "courierId": null
+      }
+    },
+    {
+      "name": "32 Courier is not reserved after stock failure",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 5,
+      "businessResult": {
+        "orderId": "0f2fd3a0-6075-4270-b8a6-51bd620bebce",
+        "userId": 8,
+        "resourceId": "slot-0002",
+        "quantity": 1,
+        "status": "released",
+        "reason": "saga_compensated",
+        "courierId": null
+      }
+    },
+    {
+      "name": "33 Order fails in Delivery on occupied slot",
+      "method": "POST",
+      "httpStatus": 201,
+      "assertions": 2,
+      "businessResult": {
+        "id": "c510cc96-03c5-41d1-a455-2837e8bb6b99",
+        "userId": 8,
+        "price": 2000,
+        "status": "rejected",
+        "reason": "courier_unavailable",
+        "sku": "SKU-1",
+        "quantity": 3,
+        "slotId": "slot-0002",
+        "courierId": null,
+        "step": "done"
+      }
+    },
+    {
+      "name": "34 Wait for Delivery rejection",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 4,
+      "businessResult": {
+        "id": "c510cc96-03c5-41d1-a455-2837e8bb6b99",
+        "userId": 8,
+        "price": 2000,
+        "status": "rejected",
+        "reason": "courier_unavailable",
+        "sku": "SKU-1",
+        "quantity": 3,
+        "slotId": "slot-0002",
+        "courierId": null,
+        "step": "done"
+      }
+    },
+    {
+      "name": "35 Delivery failure refunds money",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 2,
+      "businessResult": {
+        "userId": 8,
+        "balance": 7000,
+        "currency": "RUB"
+      }
+    },
+    {
+      "name": "36 Delivery failure restores all three products",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3
+    },
+    {
+      "name": "37 Delivery failure refunds 2000 once",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3,
+      "businessResult": {
+        "orderId": "c510cc96-03c5-41d1-a455-2837e8bb6b99",
+        "amount": 2000,
+        "status": "refunded",
+        "refundedAmount": 2000
+      }
+    },
+    {
+      "name": "38 Delivery failure releases stock",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 5,
+      "businessResult": {
+        "orderId": "c510cc96-03c5-41d1-a455-2837e8bb6b99",
+        "userId": 8,
+        "resourceId": "SKU-1",
+        "quantity": 3,
+        "status": "released",
+        "reason": "saga_compensated",
+        "courierId": null
+      }
+    },
+    {
+      "name": "39 Failed courier reservation released",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 5,
+      "businessResult": {
+        "orderId": "c510cc96-03c5-41d1-a455-2837e8bb6b99",
+        "userId": 8,
+        "resourceId": "slot-0002",
+        "quantity": 1,
+        "status": "released",
+        "reason": "saga_compensated",
+        "courierId": null
+      }
+    },
+    {
+      "name": "40 Original order keeps its courier",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 6,
+      "businessResult": {
+        "orderId": "e67a3a05-4c0b-4db3-b304-cc25ec61c262",
+        "userId": 8,
+        "resourceId": "slot-0002",
+        "quantity": 1,
+        "status": "reserved",
+        "reason": null,
+        "courierId": "courier-2"
+      }
+    },
+    {
+      "name": "41 Repeat rejected order without another refund",
+      "method": "POST",
+      "httpStatus": 200,
+      "assertions": 2,
+      "businessResult": {
+        "id": "c510cc96-03c5-41d1-a455-2837e8bb6b99",
+        "userId": 8,
+        "price": 2000,
+        "status": "rejected",
+        "reason": "courier_unavailable",
+        "sku": "SKU-1",
+        "quantity": 3,
+        "slotId": "slot-0002",
+        "courierId": null,
+        "step": "done"
+      }
+    },
+    {
+      "name": "42 Repeated rejection does not credit extra money",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 2,
+      "businessResult": {
+        "userId": 8,
+        "balance": 7000,
+        "currency": "RUB"
+      }
+    },
+    {
+      "name": "43 Repeated rejection does not add extra products",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3
+    },
+    {
+      "name": "44 Zero price is invalid",
+      "method": "POST",
+      "httpStatus": 400,
+      "assertions": 1,
+      "businessResult": {}
+    },
+    {
+      "name": "45 Zero quantity is invalid",
+      "method": "POST",
+      "httpStatus": 400,
+      "assertions": 1,
+      "businessResult": {}
+    },
+    {
+      "name": "46 Missing product is invalid",
+      "method": "POST",
+      "httpStatus": 400,
+      "assertions": 1,
+      "businessResult": {}
+    },
+    {
+      "name": "47 Missing time slot is invalid",
+      "method": "POST",
+      "httpStatus": 400,
+      "assertions": 1,
+      "businessResult": {}
+    },
+    {
+      "name": "48 Missing idempotency key is invalid",
+      "method": "POST",
+      "httpStatus": 400,
+      "assertions": 1,
+      "businessResult": {}
+    },
+    {
+      "name": "49 Anonymous order creation is denied",
+      "method": "POST",
+      "httpStatus": 401,
+      "assertions": 1
+    },
+    {
+      "name": "50 Anonymous stock access is denied",
+      "method": "GET",
+      "httpStatus": 401,
+      "assertions": 1
+    },
+    {
+      "name": "51 Anonymous delivery access is denied",
+      "method": "GET",
+      "httpStatus": 401,
+      "assertions": 1
+    },
+    {
+      "name": "52 Wait for final Kafka notification paid",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3
+    },
+    {
+      "name": "53 Wait for final Kafka notification rejected",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 3
+    },
+    {
+      "name": "54 Register another user",
+      "method": "POST",
+      "httpStatus": 201,
+      "assertions": 1,
+      "businessResult": {
+        "id": 9
+      }
+    },
+    {
+      "name": "55 Login as another user",
+      "method": "POST",
+      "httpStatus": 200,
+      "assertions": 1,
+      "businessResult": {
+        "userId": 9
+      }
+    },
+    {
+      "name": "56 Another user cannot read orders",
+      "method": "GET",
+      "httpStatus": 404,
+      "assertions": 1
+    },
+    {
+      "name": "57 Another user cannot read warehouse",
+      "method": "GET",
+      "httpStatus": 404,
+      "assertions": 1
+    },
+    {
+      "name": "58 Another user cannot read delivery",
+      "method": "GET",
+      "httpStatus": 404,
+      "assertions": 1
+    },
+    {
+      "name": "59 Another user cannot read billing",
+      "method": "GET",
+      "httpStatus": 404,
+      "assertions": 1
+    },
+    {
+      "name": "60 Another user has a separate empty account",
+      "method": "GET",
+      "httpStatus": 200,
+      "assertions": 2,
+      "businessResult": {
+        "userId": 9,
+        "balance": 0,
+        "currency": "RUB"
+      }
+    },
+    {
+      "name": "61 Internal commands are not exposed by ingress",
+      "method": "POST",
+      "httpStatus": 404,
+      "assertions": 1
+    }
+  ]
+}

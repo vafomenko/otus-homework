@@ -1,0 +1,13 @@
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+ALTER TABLE orders ADD CONSTRAINT orders_status_check CHECK (status IN ('processing', 'compensating', 'paid', 'rejected'));
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS sku TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS quantity INTEGER CHECK (quantity > 0);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS slot_id TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS courier_id TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS idempotency_key UUID;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS step TEXT NOT NULL DEFAULT 'legacy';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+CREATE UNIQUE INDEX IF NOT EXISTS ix_order_idempotency ON orders(user_id, idempotency_key);
+CREATE INDEX IF NOT EXISTS ix_saga_pending ON orders(updated_at) WHERE status IN ('processing', 'compensating') AND step <> 'legacy';
+CREATE UNIQUE INDEX IF NOT EXISTS ix_order_result ON outbox(order_id);

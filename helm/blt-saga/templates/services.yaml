@@ -1,0 +1,66 @@
+{{- range .Values.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Release.Name }}-{{ .name }}
+spec:
+  selector: {app: {{ $.Release.Name }}-{{ .name }}}
+  ports: [{name: http, port: 8000, targetPort: http}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $.Release.Name }}-{{ .name }}
+spec:
+  replicas: {{ $.Values.replicas }}
+  selector:
+    matchLabels: {app: {{ $.Release.Name }}-{{ .name }}}
+  template:
+    metadata:
+      labels: {app: {{ $.Release.Name }}-{{ .name }}}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+        seccompProfile: {type: RuntimeDefault}
+      initContainers:
+        - name: migrate
+          image: {{ $.Values.image.registry }}/blt-{{ .name }}-api:{{ $.Values.image.tag }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          args: [--migrate]
+          envFrom:
+            - configMapRef: {name: {{ $.Release.Name }}-{{ .name }}}
+          env:
+            - name: Database__Password
+              valueFrom:
+                secretKeyRef: {name: {{ $.Release.Name }}-credentials, key: database-password}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+      containers:
+        - name: api
+          image: {{ $.Values.image.registry }}/blt-{{ .name }}-api:{{ $.Values.image.tag }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          envFrom:
+            - configMapRef: {name: {{ $.Release.Name }}-{{ .name }}}
+          env:
+            - name: Database__Password
+              valueFrom:
+                secretKeyRef: {name: {{ $.Release.Name }}-credentials, key: database-password}
+            - name: Internal__ApiKey
+              valueFrom:
+                secretKeyRef: {name: {{ $.Release.Name }}-credentials, key: internal-api-key}
+          ports: [{name: http, containerPort: 8000}]
+          readinessProbe:
+            httpGet: {path: /ready, port: http}
+            periodSeconds: 3
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: "1", memory: 256Mi}
+{{- end }}

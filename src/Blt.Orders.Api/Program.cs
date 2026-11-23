@@ -10,24 +10,35 @@ public partial class Program
         var builder = ServiceHost.Create(args);
         builder.Services.AddSingleton<OrderRepository>();
         builder.Services.AddHostedService<OutboxPublisher>();
-        builder.Services.AddHttpClient("billing", client =>
+        builder.Services.AddSingleton<ISagaParticipants, HttpSagaParticipants>();
+        builder.Services.AddSingleton<SagaCoordinator>();
+        builder.Services.AddHostedService<SagaRecovery>();
+        foreach (var (service, setting) in new[] { ("billing", "Billing"), ("warehouse", "Warehouse"), ("delivery", "Delivery") })
         {
-            client.BaseAddress = new Uri(builder.Configuration["Billing:BaseUrl"] ?? "http://billing:8000");
-            client.DefaultRequestHeaders.Add("X-Service-Key", builder.Configuration["Internal:ApiKey"]);
-        });
+            builder.Services.AddHttpClient(service, client =>
+            {
+                client.BaseAddress = new Uri(builder.Configuration[setting + ":BaseUrl"] ?? $"http://{service}:8000");
+                client.Timeout = TimeSpan.FromSeconds(3);
+                client.DefaultRequestHeaders.Add("X-Service-Key", builder.Configuration["Internal:ApiKey"]);
+            });
+        }
         var app = builder.Build();
         if (!await ServiceHost.PrepareAsync(app, args, typeof(Program).Assembly)) return;
-        app.MapPost("/orders", async (OrderRequest request, ClaimsPrincipal user, OrderRepository db, IHttpClientFactory clients, CancellationToken ct) =>
+        app.MapPost("/orders", async (OrderRequest request, ClaimsPrincipal user, HttpContext context, OrderRepository db, SagaCoordinator saga, CancellationToken ct) =>
         {
-            if (!Money.IsValid(request.Price)) return Results.BadRequest(new { error = "Price must be positive integer kopecks, at most 1000000000000." });
-            var order = await db.CreateAsync(CurrentUser.Id(user), request.Price, ct);
-            using var response = await clients.CreateClient("billing").PostAsJsonAsync("/internal/charges",
-                new ChargeRequest(order.Id, order.UserId, order.Price), ct);
-            response.EnsureSuccessStatusCode();
-            var payment = await response.Content.ReadFromJsonAsync<Operation>(ct) ?? throw new InvalidOperationException("Empty billing response.");
-            order = order with { Status = payment.Status == "succeeded" ? "paid" : "rejected", Reason = payment.Reason };
-            await db.CompleteAsync(order, CurrentUser.Email(user), ct);
-            return Results.Created($"/orders/{order.Id}", order);
+            if (!Money.IsValid(request.Price) || string.IsNullOrWhiteSpace(request.Sku) || request.Sku.Length > 120 ||
+                request.Quantity is < 1 or > 10000 || string.IsNullOrWhiteSpace(request.SlotId) || request.SlotId.Length > 120)
+                return Results.BadRequest(new { error = "Valid price in kopecks, sku, quantity (1..10000) and slotId are required." });
+            if (!Guid.TryParse(context.Request.Headers["Idempotency-Key"], out var key) || key == Guid.Empty)
+                return Results.BadRequest(new { error = "Idempotency-Key must be a nonempty UUID." });
+            try
+            {
+                var (createdOrder, created) = await db.CreateSagaAsync(CurrentUser.Id(user), CurrentUser.Email(user), key, request, ct);
+                var order = await saga.RunAsync(createdOrder.Id, app.Lifetime.ApplicationStopping);
+                context.Response.Headers.Location = $"/orders/{order.Id}";
+                return Results.Json(order, statusCode: order.Status is "processing" or "compensating" ? 202 : created ? 201 : 200);
+            }
+            catch (OrderConflictException) { return Results.Conflict(new { error = "Idempotency-Key was already used with different order parameters." }); }
         }).RequireAuthorization();
         app.MapGet("/orders/{id:guid}", async (Guid id, ClaimsPrincipal user, OrderRepository db, CancellationToken ct) =>
             await db.GetAsync(id, CurrentUser.Id(user), ct) is { } order ? Results.Ok(order) : Results.NotFound()).RequireAuthorization();

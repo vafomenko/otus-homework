@@ -1,0 +1,25 @@
+image:
+  registry: vafomenko
+  tag: "9.0.0"
+  pullPolicy: IfNotPresent
+services:
+  - name: users
+  - name: billing
+  - name: orders
+  - name: notifications
+  - name: warehouse
+  - name: delivery
+replicas: 1
+database:
+  image: postgres:17.6-alpine
+  storage: 1Gi
+  password: saga-demo
+internalApiKey: saga-internal-demo-key
+kafka:
+  image: apache/kafka:4.1.2
+  storage: 2Gi
+  partitions: 3
+ingress:
+  enabled: true
+  className: nginx
+  host: arch.homework

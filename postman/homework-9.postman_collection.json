@@ -1,0 +1,2038 @@
+{
+  "info": {
+    "name": "OTUS Homework 9 — Распределённые транзакции / Saga",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Успех всех трёх участников, отказ биллинга/склада/доставки, проверка возврата денег и резервов, повторные запросы, валидация и изоляция пользователей. baseUrl initial = http://arch.homework. Суммы в копейках. Polling ограничен 60 повторами. Последний успешный заказ занимает один из 1000 учебных слотов."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://arch.homework",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.info.requestName === '01 Register user') {",
+          "  const run=pm.variables.replaceIn('{{$guid}}').replace(/-/g,'');",
+          "  pm.collectionVariables.toObject && Object.keys(pm.collectionVariables.toObject()).filter(k=>k.startsWith('poll_')||k.startsWith('letters_')).forEach(k=>pm.collectionVariables.unset(k));",
+          "  pm.collectionVariables.set('username','hw9_'+run);",
+          "  pm.collectionVariables.set('email','hw9_'+run+'@example.com');",
+          "  pm.collectionVariables.set('otherUsername','hw9_b_'+run);",
+          "  pm.collectionVariables.set('otherEmail','hw9_b_'+run+'@example.com');",
+          "  pm.collectionVariables.set('password','Hw9!'+run);",
+          "  ['depositId','billingKey','paidKey','stockKey','deliveryKey','invalidKey'].forEach(k=>pm.collectionVariables.set(k,pm.variables.replaceIn('{{$guid}}')));",
+          "  pm.collectionVariables.unset('accessToken');",
+          "}",
+          "function redact(value) {",
+          "  if (Array.isArray(value)) return value.map(redact);",
+          "  if (value && typeof value==='object') return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,/password|token|authorization|service.key/i.test(k)?'[REDACTED]':redact(v)]));",
+          "  return value;",
+          "}",
+          "console.log('REQUEST',pm.request.method,pm.variables.replaceIn(pm.request.url.toString()));",
+          "console.log('REQUEST HEADERS',JSON.stringify(redact(pm.request.headers.toObject())));",
+          "if (pm.request.body && pm.request.body.raw) {",
+          "  const body=pm.variables.replaceIn(pm.request.body.raw);",
+          "  try { console.log('REQUEST BODY',JSON.stringify(redact(JSON.parse(body)))); } catch { console.log('REQUEST BODY',body); }",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "function redact(value) {",
+          "  if (Array.isArray(value)) return value.map(redact);",
+          "  if (value && typeof value==='object') return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,/password|token|authorization|service.key/i.test(k)?'[REDACTED]':redact(v)]));",
+          "  return value;",
+          "}",
+          "console.log('RESPONSE',pm.response.code,pm.response.status);",
+          "console.log('RESPONSE HEADERS',JSON.stringify(pm.response.headers.toObject()));",
+          "try { const body=pm.response.json(); console.log('RESPONSE BODY',JSON.stringify(redact(Array.isArray(body)&&body.length>10?{total:body.length,first10:body.slice(0,10)}:body))); }",
+          "catch { console.log('RESPONSE BODY',pm.response.text()); }"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Register user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\",\n  \"firstName\": \"Иван\",\n  \"lastName\": \"Сага\",\n  \"email\": \"{{email}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('userId',pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('accessToken',pm.response.json().accessToken);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Account starts at zero",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance is 0',()=>pm.expect(pm.response.json().balance).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Read stock baseline",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const p=pm.response.json().find(p=>p.sku==='SKU-1');",
+              "pm.test('Enough demo stock',()=>pm.expect(p.available).to.be.at.least(5));",
+              "pm.collectionVariables.set('stockBefore',p.available);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Select a free concrete courier and time slot",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/delivery/slots"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const slot=pm.response.json().find(s=>s.available===1);",
+              "pm.test('A free courier slot exists',()=>pm.expect(slot).to.be.an('object'));",
+              "if(slot) {",
+              "  pm.collectionVariables.set('slotId',slot.id);",
+              "  pm.collectionVariables.set('courierId',slot.courierId);",
+              "  pm.test('Slot has start and end times',()=>pm.expect(Date.parse(slot.endsAt)).to.be.above(Date.parse(slot.startsAt)));",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Order fails in Billing",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{billingKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 3000,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "pm.test('Order accepted',()=>pm.expect([201,202]).to.include(pm.response.code));",
+              "const o=pm.response.json();",
+              "pm.collectionVariables.set('billingFailId',o.id);",
+              "pm.test('Location points to the order',()=>pm.expect(pm.response.headers.get('Location')).to.eql('/orders/'+o.id));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Wait for Billing rejection",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/orders/{{billingFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const o=pm.response.json();",
+              "if (['processing','compensating'].includes(o.status)) {",
+              "  const key='poll_billingFailId', n=Number(pm.collectionVariables.get(key)||0)+1;",
+              "  pm.collectionVariables.set(key,n);",
+              "  pm.test('Saga finishes within 60 polls',()=>pm.expect(n).to.be.below(60));",
+              "  if(n<60) pm.execution.setNextRequest(pm.info.requestName);",
+              "} else {",
+              "  pm.test('Order is rejected',()=>pm.expect(o.status).to.eql('rejected'));",
+              "  pm.test('Saga is finished',()=>pm.expect(o.step).to.eql('done'));",
+              "  pm.test('Correct rejection reason',()=>pm.expect(o.reason).to.eql(\"insufficient_funds\"));",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Failed payment leaves balance unchanged",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance is 0',()=>pm.expect(pm.response.json().balance).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Failed payment leaves stock unchanged",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const p=pm.response.json().find(p=>p.sku==='SKU-1');",
+              "pm.test('Stock has the expected quantity',()=>pm.expect(p.available).to.eql(Number(pm.collectionVariables.get('stockBefore'))-0));",
+              "pm.test('Empty product remains empty',()=>pm.expect(pm.response.json().find(p=>p.sku==='SKU-EMPTY').available).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 No stock reservation after payment failure",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/reservations/{{billingFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const r=pm.response.json();",
+              "pm.test('Reservation is released',()=>pm.expect(r.status).to.eql('released'));",
+              "pm.test('Correct order and owner',()=>{pm.expect(r.orderId).to.eql(pm.collectionVariables.get('billingFailId'));pm.expect(r.userId).to.eql(Number(pm.collectionVariables.get('userId')));});",
+              "pm.test('Correct quantity',()=>pm.expect(r.quantity).to.eql(2));",
+              "pm.test('Correct product',()=>pm.expect(r.resourceId).to.eql('SKU-1'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 No courier reservation after payment failure",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/delivery/reservations/{{billingFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const r=pm.response.json();",
+              "pm.test('Reservation is released',()=>pm.expect(r.status).to.eql('released'));",
+              "pm.test('Correct order and owner',()=>{pm.expect(r.orderId).to.eql(pm.collectionVariables.get('billingFailId'));pm.expect(r.userId).to.eql(Number(pm.collectionVariables.get('userId')));});",
+              "pm.test('Correct quantity',()=>pm.expect(r.quantity).to.eql(1));",
+              "pm.test('Correct time slot',()=>pm.expect(r.resourceId).to.eql(pm.collectionVariables.get('slotId')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Declined payment is fenced",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/payments/{{billingFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const p=pm.response.json();",
+              "pm.test('Payment is cancelled',()=>pm.expect(p.status).to.eql('cancelled'));",
+              "pm.test('Refund applied exactly once',()=>pm.expect(p.refundedAmount).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 Deposit 10000 kopecks",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/deposits",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"operationId\": \"{{depositId}}\",\n  \"amount\": 10000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Deposit succeeds',()=>pm.expect(pm.response.json().status).to.eql('succeeded'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 Successful order",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{paidKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 3000,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "pm.test('Order accepted',()=>pm.expect([201,202]).to.include(pm.response.code));",
+              "const o=pm.response.json();",
+              "pm.collectionVariables.set('paidId',o.id);",
+              "pm.test('Location points to the order',()=>pm.expect(pm.response.headers.get('Location')).to.eql('/orders/'+o.id));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 Wait for successful order",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/orders/{{paidId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const o=pm.response.json();",
+              "if (['processing','compensating'].includes(o.status)) {",
+              "  const key='poll_paidId', n=Number(pm.collectionVariables.get(key)||0)+1;",
+              "  pm.collectionVariables.set(key,n);",
+              "  pm.test('Saga finishes within 60 polls',()=>pm.expect(n).to.be.below(60));",
+              "  if(n<60) pm.execution.setNextRequest(pm.info.requestName);",
+              "} else {",
+              "  pm.test('Order is paid',()=>pm.expect(o.status).to.eql('paid'));",
+              "  pm.test('Saga is finished',()=>pm.expect(o.step).to.eql('done'));",
+              "  pm.test('Correct rejection reason',()=>pm.expect(o.reason).to.eql(null));",
+              "}",
+              "if(o.status==='paid') pm.test('Courier recorded in order',()=>pm.expect(o.courierId).to.eql(pm.collectionVariables.get('courierId')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 Successful order costs 3000",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance is 7000',()=>pm.expect(pm.response.json().balance).to.eql(7000));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 Two concrete products reserved",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const p=pm.response.json().find(p=>p.sku==='SKU-1');",
+              "pm.test('Stock has the expected quantity',()=>pm.expect(p.available).to.eql(Number(pm.collectionVariables.get('stockBefore'))-2));",
+              "pm.test('Empty product remains empty',()=>pm.expect(pm.response.json().find(p=>p.sku==='SKU-EMPTY').available).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 Inspect successful stock reservation",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/reservations/{{paidId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const r=pm.response.json();",
+              "pm.test('Reservation is reserved',()=>pm.expect(r.status).to.eql('reserved'));",
+              "pm.test('Correct order and owner',()=>{pm.expect(r.orderId).to.eql(pm.collectionVariables.get('paidId'));pm.expect(r.userId).to.eql(Number(pm.collectionVariables.get('userId')));});",
+              "pm.test('Correct quantity',()=>pm.expect(r.quantity).to.eql(2));",
+              "pm.test('Correct product',()=>pm.expect(r.resourceId).to.eql('SKU-1'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 Inspect successful courier reservation",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/delivery/reservations/{{paidId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const r=pm.response.json();",
+              "pm.test('Reservation is reserved',()=>pm.expect(r.status).to.eql('reserved'));",
+              "pm.test('Correct order and owner',()=>{pm.expect(r.orderId).to.eql(pm.collectionVariables.get('paidId'));pm.expect(r.userId).to.eql(Number(pm.collectionVariables.get('userId')));});",
+              "pm.test('Correct quantity',()=>pm.expect(r.quantity).to.eql(1));",
+              "pm.test('Correct time slot',()=>pm.expect(r.resourceId).to.eql(pm.collectionVariables.get('slotId')));",
+              "pm.test('Specific courier reserved',()=>pm.expect(r.courierId).to.eql(pm.collectionVariables.get('courierId')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "20 Successful payment",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/payments/{{paidId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const p=pm.response.json();",
+              "pm.test('Payment is succeeded',()=>pm.expect(p.status).to.eql('succeeded'));",
+              "pm.test('Refund applied exactly once',()=>pm.expect(p.refundedAmount).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21 Courier slot is occupied",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/delivery/slots"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Chosen courier slot is occupied',()=>pm.expect(pm.response.json().find(s=>s.id===pm.collectionVariables.get('slotId')).available).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "22 Repeat successful order with same key",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{paidKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 3000,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Same order, no new saga',()=>pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('paidId')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "23 No double charge",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance is 7000',()=>pm.expect(pm.response.json().balance).to.eql(7000));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "24 No duplicate stock reservation",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const p=pm.response.json().find(p=>p.sku==='SKU-1');",
+              "pm.test('Stock has the expected quantity',()=>pm.expect(p.available).to.eql(Number(pm.collectionVariables.get('stockBefore'))-2));",
+              "pm.test('Empty product remains empty',()=>pm.expect(pm.response.json().find(p=>p.sku==='SKU-EMPTY').available).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "25 Same key with changed parameters is rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{paidKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 3001,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 409', () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "26 Order fails in Warehouse",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{stockKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 2000,\n  \"sku\": \"SKU-EMPTY\",\n  \"quantity\": 1,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "pm.test('Order accepted',()=>pm.expect([201,202]).to.include(pm.response.code));",
+              "const o=pm.response.json();",
+              "pm.collectionVariables.set('stockFailId',o.id);",
+              "pm.test('Location points to the order',()=>pm.expect(pm.response.headers.get('Location')).to.eql('/orders/'+o.id));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "27 Wait for Warehouse rejection",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/orders/{{stockFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const o=pm.response.json();",
+              "if (['processing','compensating'].includes(o.status)) {",
+              "  const key='poll_stockFailId', n=Number(pm.collectionVariables.get(key)||0)+1;",
+              "  pm.collectionVariables.set(key,n);",
+              "  pm.test('Saga finishes within 60 polls',()=>pm.expect(n).to.be.below(60));",
+              "  if(n<60) pm.execution.setNextRequest(pm.info.requestName);",
+              "} else {",
+              "  pm.test('Order is rejected',()=>pm.expect(o.status).to.eql('rejected'));",
+              "  pm.test('Saga is finished',()=>pm.expect(o.step).to.eql('done'));",
+              "  pm.test('Correct rejection reason',()=>pm.expect(o.reason).to.eql(\"out_of_stock\"));",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "28 Warehouse failure refunds money",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance is 7000',()=>pm.expect(pm.response.json().balance).to.eql(7000));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "29 Warehouse failure leaves stock unchanged",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const p=pm.response.json().find(p=>p.sku==='SKU-1');",
+              "pm.test('Stock has the expected quantity',()=>pm.expect(p.available).to.eql(Number(pm.collectionVariables.get('stockBefore'))-2));",
+              "pm.test('Empty product remains empty',()=>pm.expect(pm.response.json().find(p=>p.sku==='SKU-EMPTY').available).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "30 Warehouse failure refunds 2000 once",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/payments/{{stockFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const p=pm.response.json();",
+              "pm.test('Payment is refunded',()=>pm.expect(p.status).to.eql('refunded'));",
+              "pm.test('Refund applied exactly once',()=>pm.expect(p.refundedAmount).to.eql(2000));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "31 Failed stock reservation released",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/reservations/{{stockFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const r=pm.response.json();",
+              "pm.test('Reservation is released',()=>pm.expect(r.status).to.eql('released'));",
+              "pm.test('Correct order and owner',()=>{pm.expect(r.orderId).to.eql(pm.collectionVariables.get('stockFailId'));pm.expect(r.userId).to.eql(Number(pm.collectionVariables.get('userId')));});",
+              "pm.test('Correct quantity',()=>pm.expect(r.quantity).to.eql(1));",
+              "pm.test('Correct product',()=>pm.expect(r.resourceId).to.eql('SKU-EMPTY'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "32 Courier is not reserved after stock failure",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/delivery/reservations/{{stockFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const r=pm.response.json();",
+              "pm.test('Reservation is released',()=>pm.expect(r.status).to.eql('released'));",
+              "pm.test('Correct order and owner',()=>{pm.expect(r.orderId).to.eql(pm.collectionVariables.get('stockFailId'));pm.expect(r.userId).to.eql(Number(pm.collectionVariables.get('userId')));});",
+              "pm.test('Correct quantity',()=>pm.expect(r.quantity).to.eql(1));",
+              "pm.test('Correct time slot',()=>pm.expect(r.resourceId).to.eql(pm.collectionVariables.get('slotId')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "33 Order fails in Delivery on occupied slot",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{deliveryKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 2000,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 3,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "pm.test('Order accepted',()=>pm.expect([201,202]).to.include(pm.response.code));",
+              "const o=pm.response.json();",
+              "pm.collectionVariables.set('deliveryFailId',o.id);",
+              "pm.test('Location points to the order',()=>pm.expect(pm.response.headers.get('Location')).to.eql('/orders/'+o.id));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "34 Wait for Delivery rejection",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/orders/{{deliveryFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const o=pm.response.json();",
+              "if (['processing','compensating'].includes(o.status)) {",
+              "  const key='poll_deliveryFailId', n=Number(pm.collectionVariables.get(key)||0)+1;",
+              "  pm.collectionVariables.set(key,n);",
+              "  pm.test('Saga finishes within 60 polls',()=>pm.expect(n).to.be.below(60));",
+              "  if(n<60) pm.execution.setNextRequest(pm.info.requestName);",
+              "} else {",
+              "  pm.test('Order is rejected',()=>pm.expect(o.status).to.eql('rejected'));",
+              "  pm.test('Saga is finished',()=>pm.expect(o.step).to.eql('done'));",
+              "  pm.test('Correct rejection reason',()=>pm.expect(o.reason).to.eql(\"courier_unavailable\"));",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "35 Delivery failure refunds money",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance is 7000',()=>pm.expect(pm.response.json().balance).to.eql(7000));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "36 Delivery failure restores all three products",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const p=pm.response.json().find(p=>p.sku==='SKU-1');",
+              "pm.test('Stock has the expected quantity',()=>pm.expect(p.available).to.eql(Number(pm.collectionVariables.get('stockBefore'))-2));",
+              "pm.test('Empty product remains empty',()=>pm.expect(pm.response.json().find(p=>p.sku==='SKU-EMPTY').available).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "37 Delivery failure refunds 2000 once",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/payments/{{deliveryFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const p=pm.response.json();",
+              "pm.test('Payment is refunded',()=>pm.expect(p.status).to.eql('refunded'));",
+              "pm.test('Refund applied exactly once',()=>pm.expect(p.refundedAmount).to.eql(2000));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "38 Delivery failure releases stock",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/reservations/{{deliveryFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const r=pm.response.json();",
+              "pm.test('Reservation is released',()=>pm.expect(r.status).to.eql('released'));",
+              "pm.test('Correct order and owner',()=>{pm.expect(r.orderId).to.eql(pm.collectionVariables.get('deliveryFailId'));pm.expect(r.userId).to.eql(Number(pm.collectionVariables.get('userId')));});",
+              "pm.test('Correct quantity',()=>pm.expect(r.quantity).to.eql(3));",
+              "pm.test('Correct product',()=>pm.expect(r.resourceId).to.eql('SKU-1'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "39 Failed courier reservation released",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/delivery/reservations/{{deliveryFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const r=pm.response.json();",
+              "pm.test('Reservation is released',()=>pm.expect(r.status).to.eql('released'));",
+              "pm.test('Correct order and owner',()=>{pm.expect(r.orderId).to.eql(pm.collectionVariables.get('deliveryFailId'));pm.expect(r.userId).to.eql(Number(pm.collectionVariables.get('userId')));});",
+              "pm.test('Correct quantity',()=>pm.expect(r.quantity).to.eql(1));",
+              "pm.test('Correct time slot',()=>pm.expect(r.resourceId).to.eql(pm.collectionVariables.get('slotId')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "40 Original order keeps its courier",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/delivery/reservations/{{paidId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const r=pm.response.json();",
+              "pm.test('Reservation is reserved',()=>pm.expect(r.status).to.eql('reserved'));",
+              "pm.test('Correct order and owner',()=>{pm.expect(r.orderId).to.eql(pm.collectionVariables.get('paidId'));pm.expect(r.userId).to.eql(Number(pm.collectionVariables.get('userId')));});",
+              "pm.test('Correct quantity',()=>pm.expect(r.quantity).to.eql(1));",
+              "pm.test('Correct time slot',()=>pm.expect(r.resourceId).to.eql(pm.collectionVariables.get('slotId')));",
+              "pm.test('Specific courier reserved',()=>pm.expect(r.courierId).to.eql(pm.collectionVariables.get('courierId')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "41 Repeat rejected order without another refund",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{deliveryKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 2000,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 3,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Same rejected order',()=>pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('deliveryFailId')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "42 Repeated rejection does not credit extra money",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance is 7000',()=>pm.expect(pm.response.json().balance).to.eql(7000));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "43 Repeated rejection does not add extra products",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const p=pm.response.json().find(p=>p.sku==='SKU-1');",
+              "pm.test('Stock has the expected quantity',()=>pm.expect(p.available).to.eql(Number(pm.collectionVariables.get('stockBefore'))-2));",
+              "pm.test('Empty product remains empty',()=>pm.expect(pm.response.json().find(p=>p.sku==='SKU-EMPTY').available).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "44 Zero price is invalid",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{invalidKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 0,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "45 Zero quantity is invalid",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{invalidKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 3000,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 0,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "46 Missing product is invalid",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{invalidKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 3000,\n  \"sku\": \"\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "47 Missing time slot is invalid",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{invalidKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 3000,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "48 Missing idempotency key is invalid",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 3000,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "49 Anonymous order creation is denied",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{invalidKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 3000,\n  \"sku\": \"SKU-1\",\n  \"quantity\": 2,\n  \"slotId\": \"{{slotId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "50 Anonymous stock access is denied",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/products",
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "51 Anonymous delivery access is denied",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/delivery/slots",
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "52 Wait for final Kafka notification paid",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/notifications?orderId={{paidId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const letters=pm.response.json();",
+              "if(letters.length===0) {",
+              "  const k='letters_paidId', n=Number(pm.collectionVariables.get(k)||0)+1;",
+              "  pm.collectionVariables.set(k,n);",
+              "  pm.test('Notification arrives within 60 polls',()=>pm.expect(n).to.be.below(60));",
+              "  if(n<60) pm.execution.setNextRequest(pm.info.requestName);",
+              "} else {",
+              "  pm.test('Exactly one final notification',()=>pm.expect(letters.length).to.eql(1));",
+              "  pm.test('Correct final outcome and recipient',()=>{pm.expect(letters[0].outcome).to.eql('paid');pm.expect(letters[0].email).to.eql(pm.collectionVariables.get('email'));});",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "53 Wait for final Kafka notification rejected",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/notifications?orderId={{deliveryFailId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const letters=pm.response.json();",
+              "if(letters.length===0) {",
+              "  const k='letters_deliveryFailId', n=Number(pm.collectionVariables.get(k)||0)+1;",
+              "  pm.collectionVariables.set(k,n);",
+              "  pm.test('Notification arrives within 60 polls',()=>pm.expect(n).to.be.below(60));",
+              "  if(n<60) pm.execution.setNextRequest(pm.info.requestName);",
+              "} else {",
+              "  pm.test('Exactly one final notification',()=>pm.expect(letters.length).to.eql(1));",
+              "  pm.test('Correct final outcome and recipient',()=>{pm.expect(letters[0].outcome).to.eql('rejected');pm.expect(letters[0].email).to.eql(pm.collectionVariables.get('email'));});",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "54 Register another user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{otherUsername}}\",\n  \"password\": \"{{password}}\",\n  \"firstName\": \"Пётр\",\n  \"lastName\": \"Другой\",\n  \"email\": \"{{otherEmail}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "55 Login as another user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{otherUsername}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('accessToken',pm.response.json().accessToken);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "56 Another user cannot read orders",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/orders/{{paidId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "57 Another user cannot read warehouse",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/warehouse/reservations/{{paidId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "58 Another user cannot read delivery",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/delivery/reservations/{{paidId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "59 Another user cannot read billing",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/payments/{{paidId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "60 Another user has a separate empty account",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          }
+        ],
+        "url": "{{baseUrl}}/billing/account"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Balance is 0',()=>pm.expect(pm.response.json().balance).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "61 Internal commands are not exposed by ingress",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Host",
+            "value": "arch.homework"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/internal/charges",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderId\": \"{{paidId}}\",\n  \"userId\": 1,\n  \"amount\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

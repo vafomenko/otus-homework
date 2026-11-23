@@ -1,51 +1,44 @@
-# Домашнее задание №8 — Stream Processing
+# Домашнее задание №9 — Распределённые транзакции
 
-Сервисы заказов, биллинга и уведомлений на .NET 10, PostgreSQL и **Apache Kafka**.
-Регистрация создаёт счёт; заказ списывает деньги через Billing и публикует
-результат в Kafka. Notifications сохраняет «Письмо счастья» или «Письмо горя».
+Сервисы интернет-магазина на .NET 10, PostgreSQL и Kafka.
+Создание заказа выполняется через **оркестрируемую Saga**:
+оплата в Billing → резерв товара в Warehouse → резерв конкретного
+курьера на временной слот в Delivery. При отказе выполняются компенсации.
 
-## Материалы для сдачи
+Состояние и повторы сохраняются в БД; worker возобновляет
+сагу после сбоя. [Сценарии перезапуска и действия при зависшем заказе](docs/saga/recovery.md).
 
-- [Архитектура, три варианта взаимодействия и инструкция](docs/streaming/README.md).
-- [Схема сервисов — PNG](docs/streaming/architecture.png).
-- Sequence-диаграммы: [HTTP](docs/streaming/http-only.png),
-  [HTTP + Kafka](docs/streaming/http-kafka.png),
-  [Event Collaboration](docs/streaming/event-collaboration.png).
-- IDL: [OpenAPI](docs/streaming/openapi.yaml),
-  [AsyncAPI](docs/streaming/notifications.asyncapi.yaml); контракты теоретических
-  вариантов доступны в инструкции.
-- [Helm-чарт](helm/blt-streaming).
-- [Postman-коллекция](postman/homework-8.postman_collection.json) и
-  [окружение](postman/homework-8.postman_environment.json): `{{baseUrl}}` = `http://arch.homework`.
-- [Результаты проверок](docs/results/streaming/README.md).
+- [Паттерн, архитектура, установка и сценарии проверки](docs/saga/README.md).
+- [Helm-чарт](helm/blt-saga).
+- [Postman-коллекция](postman/homework-9.postman_collection.json) и
+  [окружение](postman/homework-9.postman_environment.json).
+  Initial `{{baseUrl}}` в обоих файлах — **`http://arch.homework`**.
+- [Результаты проверок](docs/results/saga/README.md).
 
-![Архитектура](docs/streaming/architecture.png)
-
-## Запуск
-
-Из корня репозитория, PowerShell 7, Docker Desktop с Linux containers запущен:
+Локальный стенд, PowerShell 7, Docker Desktop с Linux containers:
 
 ```powershell
-./scripts/setup-streaming.ps1
-./scripts/test-streaming.ps1 -BaseUrl http://127.0.0.1:8098
+./scripts/setup-saga.ps1
+./scripts/test-saga.ps1 -BaseUrl http://127.0.0.1:8099
 ```
 
-Скрипт создаёт kind-кластер `otus-hw8`, собирает и загружает четыре образа.
-Приложения, БД и Kafka устанавливаются в namespace **`blt`**,
-ingress controller — в **`ingress-nginx`**. Kubeconfig:
-`.local/kubeconfig-streaming`. Newman выводит запросы и ответы.
+Скрипт собирает шесть образов и создаёт отдельный kind-кластер **`otus-hw9`**.
+API, шесть отдельных PostgreSQL и Kafka устанавливаются в namespace **`blt`**;
+ingress controller — в **`ingress-nginx`**. Kubeconfig: `.local/kubeconfig-saga`.
+Коллекция передаёт `Host: arch.homework` при локальном переопределении URL.
 
-Команда установки приложения в подготовленный кластер:
+Команды установки в подготовленный кластер с ingress, StorageClass и образами:
 
 ```powershell
-helm upgrade --install blt-streaming ./helm/blt-streaming --namespace blt --create-namespace --wait --wait-for-jobs --timeout 10m
+kubectl create namespace blt --dry-run=client -o yaml | kubectl apply -f -
+helm upgrade --install blt-saga ./helm/blt-saga --namespace blt --wait --wait-for-jobs --timeout 10m
 ```
 
-Автотесты с временными PostgreSQL в Docker:
+Для созданного скриптом кластера укажите `--kubeconfig .local/kubeconfig-saga`
+в командах kubectl и Helm. Полная подготовка описана в инструкции.
+
+Автотесты используют временные PostgreSQL-контейнеры:
 
 ```powershell
 dotnet test Blt.slnx
 ```
-
-Предыдущие работы: [ДЗ №4](docs/homework-4.md), [№5](docs/homework-5.md),
-[№6](docs/homework-6.md), [№7](docs/authentication.md).

@@ -19,14 +19,13 @@ public sealed class NotificationRepository(Database db)
         return SaveAsync(new Notification(Guid.NewGuid(), message.Id, data.OrderId, data.UserId, data.Email,
             happy ? "Письмо счастья" : "Письмо горя",
             happy ? $"Заказ {data.OrderId} оформлен. Оплата {data.Price} коп. прошла успешно."
-                  : $"Заказ {data.OrderId} не оформлен: недостаточно средств. Деньги не списаны.",
+                  : $"Заказ {data.OrderId} не оформлен: {data.Reason}. Оплата и резервы отменены.",
             data.Status, DateTimeOffset.UtcNow), ct);
     }
 
     public async Task SaveAsync(Notification message, CancellationToken ct = default)
     {
         await using var connection = await db.OpenAsync(ct);
-        // This unique insert is also the inbox: replayed events have no second business effect.
         await using var command = new NpgsqlCommand("""
             INSERT INTO notifications(id, event_id, order_id, user_id, email, subject, body, outcome, created_at)
             VALUES (@id, @event, @order, @user, @email, @subject, @body, @outcome, @time)

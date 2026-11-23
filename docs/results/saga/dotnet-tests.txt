@@ -1,0 +1,3 @@
+dotnet test Blt.slnx
+Blt.Users.Api.Tests: passed 41, failed 0, skipped 0
+Blt.Saga.Tests: passed 37, failed 0, skipped 0

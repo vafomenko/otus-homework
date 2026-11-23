@@ -1,0 +1,9 @@
+[
+  {
+    "name": "blt-saga",
+    "namespace": "blt",
+    "status": "deployed",
+    "chart": "blt-saga-9.0.0",
+    "app_version": "9.0.0"
+  }
+]

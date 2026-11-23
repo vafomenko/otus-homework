@@ -1,0 +1,19 @@
+flowchart LR
+    Client["Клиент / Postman\narch.homework"] --> Ingress["Ingress nginx"]
+    Ingress --> Users["Users\nСессии и профиль"]
+    Ingress --> Orders["Orders\nSaga + recovery + outbox"]
+    Ingress --> Billing["Billing\nСписание / возврат"]
+    Ingress --> Warehouse["Warehouse\nРезерв / освобождение товара"]
+    Ingress --> Delivery["Delivery\nРезерв / освобождение курьера"]
+    Ingress --> Notifications["Notifications"]
+    Orders -->|"1. Charge / Refund"| Billing
+    Orders -->|"2. Reserve / Release"| Warehouse
+    Orders -->|"3. Reserve / Release"| Delivery
+    Orders -->|"Завершённый заказ через outbox"| Kafka["Kafka"]
+    Kafka --> Notifications
+    Users --- UsersDB[("Users DB")]
+    Orders --- OrdersDB[("Orders DB")]
+    Billing --- BillingDB[("Billing DB")]
+    Warehouse --- WarehouseDB[("Warehouse DB")]
+    Delivery --- DeliveryDB[("Delivery DB")]
+    Notifications --- NotificationsDB[("Notifications DB")]

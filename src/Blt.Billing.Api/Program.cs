@@ -26,6 +26,18 @@ public partial class Program
         });
         internalApi.MapPost("/charges", (ChargeRequest request, BillingRepository db, CancellationToken ct) =>
             Apply(db, request.UserId, request.OrderId, request.Amount, "charge", ct));
+        internalApi.MapPost("/refunds", async (ChargeRequest request, BillingRepository db, CancellationToken ct) =>
+        {
+            if (!Money.IsValid(request.Amount) || request.OrderId == Guid.Empty || request.UserId <= 0) return Results.BadRequest();
+            try
+            {
+                var payment = await db.RefundAsync(request, ct);
+                return payment is null ? Results.NotFound() : Results.Ok(payment);
+            }
+            catch (OperationConflictException) { return Results.Conflict(); }
+        });
+        app.MapGet("/billing/payments/{id:guid}", async (Guid id, ClaimsPrincipal user, BillingRepository db, CancellationToken ct) =>
+            await db.PaymentAsync(CurrentUser.Id(user), id, ct) is { } payment ? Results.Ok(payment) : Results.NotFound()).RequireAuthorization();
         await app.RunAsync();
     }
 

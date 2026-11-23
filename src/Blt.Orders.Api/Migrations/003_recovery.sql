@@ -1,0 +1,8 @@
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS deadline_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '2 minutes');
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS recovery_attempts BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS retry_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS last_attempt_at TIMESTAMPTZ;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS last_error TEXT;
+CREATE INDEX IF NOT EXISTS ix_saga_recovery_due ON orders(next_attempt_at, id)
+    WHERE status IN ('processing', 'compensating') AND step <> 'legacy';

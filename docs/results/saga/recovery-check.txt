@@ -1,0 +1,18 @@
+PASS: Pending compensation returns HTTP 202
+PASS: Unavailable Delivery leaves a durable pending compensation
+PASS: Failed compensation step is persisted
+PASS: No final notification before compensation finishes
+PASS: Payment is durably debited before rollback
+PASS: Stock is durably reserved before rollback
+PASS: Billing reboot preserves the debit
+PASS: Warehouse reboot preserves the reservation
+PASS: New Orders process finishes the persisted saga
+PASS: Transport failure reason is retained
+PASS: Full payment is refunded
+PASS: All stock is restored
+PASS: Warehouse reservation is released
+PASS: Delivery cancellation is fenced
+PASS: Payment is refunded exactly once
+PASS: Completed order retry returns HTTP 200
+PASS: Retry returns the original order
+PASS: Retry does not add a second refund

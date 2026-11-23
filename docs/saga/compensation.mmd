@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant C as Клиент
+    participant O as Orders / Saga
+    participant B as Billing
+    participant W as Warehouse
+    participant D as Delivery
+    C->>O: POST /orders + Idempotency-Key
+    O->>O: Сохранить заказ, step=payment
+    O->>B: charge(orderId, amount)
+    B-->>O: succeeded
+    O->>O: step=stock
+    O->>W: reserve(orderId, sku, quantity)
+    W-->>O: reserved
+    O->>O: step=delivery
+    O->>D: reserve(orderId, slotId)
+    D-->>O: rejected / timeout
+    O->>O: status=compensating, step=undo_delivery
+    O->>D: release(orderId, slotId)
+    D-->>O: released
+    O->>O: step=undo_stock
+    O->>W: release(orderId, sku, quantity)
+    W-->>O: released
+    O->>O: step=undo_payment
+    O->>B: refund(orderId, amount)
+    B-->>O: refunded
+    O->>O: rejected + outbox одной транзакцией
+    O-->>C: 201 rejected
+    Note over O,D: При сбое компенсации: 202 compensating и повтор фоновым worker

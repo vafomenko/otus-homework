@@ -1,0 +1,28 @@
+Deployments
+deployment.apps/blt-saga-billing 1/1
+deployment.apps/blt-saga-delivery 1/1
+deployment.apps/blt-saga-notifications 1/1
+deployment.apps/blt-saga-orders 1/1
+deployment.apps/blt-saga-users 1/1
+deployment.apps/blt-saga-warehouse 1/1
+
+StatefulSets
+statefulset.apps/blt-saga-billing-db 1/1
+statefulset.apps/blt-saga-delivery-db 1/1
+statefulset.apps/blt-saga-kafka 1/1
+statefulset.apps/blt-saga-notifications-db 1/1
+statefulset.apps/blt-saga-orders-db 1/1
+statefulset.apps/blt-saga-users-db 1/1
+statefulset.apps/blt-saga-warehouse-db 1/1
+
+Ingress
+ingress.networking.k8s.io/blt-saga nginx arch.homework
+
+PVC
+persistentvolumeclaim/data-blt-saga-billing-db-0 Bound 1Gi
+persistentvolumeclaim/data-blt-saga-delivery-db-0 Bound 1Gi
+persistentvolumeclaim/data-blt-saga-kafka-0 Bound 2Gi
+persistentvolumeclaim/data-blt-saga-notifications-db-0 Bound 1Gi
+persistentvolumeclaim/data-blt-saga-orders-db-0 Bound 1Gi
+persistentvolumeclaim/data-blt-saga-users-db-0 Bound 1Gi
+persistentvolumeclaim/data-blt-saga-warehouse-db-0 Bound 1Gi
